@@ -1,0 +1,381 @@
+<Window x:Class="EnvioSafTApp.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Envio SAF-T AT" Height="600" Width="980" MaxWidth="980" WindowStartupLocation="CenterScreen"
+        Background="#F8F9FA"
+        MinWidth="1000"
+        MinHeight="600"
+        SizeToContent="WidthAndHeight">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="100"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="36"/>
+        </Grid.RowDefinitions>
+
+        <!-- Cabeçalho -->
+        <Border Grid.Row="0" Padding="20">
+            <Border.Background>
+                <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                    <GradientStop Color="#FFE2ECF3" Offset="1"/>
+                    <GradientStop Color="#FF80BDED" Offset="0"/>
+                </LinearGradientBrush>
+            </Border.Background>
+            <Image x:Name="Logo" Source="/EnviaSaft.png" HorizontalAlignment="Left"/>
+        </Border>
+
+        <!-- Conteúdo principal -->
+        <Grid Grid.Row="1" Margin="20,20,20,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="3*"/>
+                <ColumnDefinition Width="1.2*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Coluna Esquerda (formulário) -->
+            <StackPanel Grid.Column="0" Margin="0,0,20,0">
+
+                <!-- GroupBox: Dados do Envio -->
+                <GroupBox Header="Dados do Envio" Style="{StaticResource ModernGroupBoxStyle}" Margin="0,0,0,10">
+                    <StackPanel Margin="10">
+                        <!-- Linha 1 -->
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                            <StackPanel Width="120" Margin="0,0,20,0">
+                                <TextBlock Text="Ano"/>
+                                <TextBox x:Name="AnoTextBox" Style="{StaticResource ModernTextBoxStyle}" GotFocus="Campo_GotFocus" MouseEnter="Campo_MouseEnter" TextChanged="CampoCorrigido"/>
+                            </StackPanel>
+                            <StackPanel Width="120" Margin="0,0,20,0">
+                                <TextBlock Text="Mês"/>
+                                <TextBox x:Name="MesTextBox" Style="{StaticResource ModernTextBoxStyle}" GotFocus="Campo_GotFocus" MouseEnter="Campo_MouseEnter" TextChanged="CampoCorrigido"/>
+                            </StackPanel>
+                            <StackPanel Width="180">
+                                <TextBlock Text="Operação"/>
+                                <ComboBox x:Name="OperacaoComboBox" Style="{StaticResource ModernComboBoxStyle}" GotFocus="Campo_GotFocus" MouseEnter="Campo_MouseEnter">
+                                    <ComboBoxItem Content="validar"/>
+                                    <ComboBoxItem Content="enviar" IsSelected="True"/>
+                                </ComboBox>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- Linha 2 -->
+                        <StackPanel Orientation="Horizontal">
+                            <StackPanel Width="220" Margin="0,0,20,0">
+                                <TextBlock Text="NIF"/>
+                                <TextBox x:Name="NifTextBox" Style="{StaticResource ModernTextBoxStyle}" GotFocus="Campo_GotFocus" MouseEnter="Campo_MouseEnter"/>
+                            </StackPanel>
+                            <StackPanel Width="220" Margin="0,0,20,0">
+                                <TextBlock Text="Password"/>
+                                <PasswordBox x:Name="PasswordBox" Style="{StaticResource ModernPasswordBoxStyle}" GotFocus="Campo_GotFocus" MouseEnter="Campo_MouseEnter"/>
+                            </StackPanel>
+                            <StackPanel VerticalAlignment="Bottom">
+                                <Button x:Name="EnviarButton" Content="Enviar"
+                                        Width="120" Height="32"
+                                        Style="{StaticResource PrimaryButtonStyle}"
+                                        Click="Enviar_Click"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </GroupBox>
+
+                <!-- GroupBox: Ficheiro SAF-T e Opções -->
+                <GroupBox Header="Ficheiro SAF-T e Opções" Style="{StaticResource ModernGroupBoxStyle}" Margin="0,0,0,20">
+                    <Grid Margin="10">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Linha 0: Ficheiro SAF-T -->
+                        <TextBlock Text="Ficheiro SAF-T" Grid.Row="0" Margin="0,0,0,6"/>
+                        <DockPanel Grid.Row="0" Margin="0,20,0,20">
+                            <TextBox x:Name="FicheiroTextBox"
+                                     Style="{StaticResource ModernTextBoxStyle}"
+                                     Height="36"
+                                     Width="560"
+                                     MaxWidth="560"
+                                     VerticalAlignment="Center"
+                                     GotFocus="Campo_GotFocus" MouseEnter="Campo_MouseEnter"/>
+                            <Button Content="..."
+                                    Style="{StaticResource ModernIconButtonStyle}"
+                                    Width="36"
+                                    Height="36"
+                                    Margin="6,0,0,4"
+                                    Click="BrowseFile_Click"
+                                    VerticalAlignment="Center"/>
+                        </DockPanel>
+
+                        <!-- Linha 1: Opções Avançadas -->
+                        <GroupBox Header="Opções Avançadas" Style="{StaticResource ModernGroupBoxStyle}" Grid.Row="1">
+                            <Grid Margin="10">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <!-- Checkboxes -->
+                                    <RowDefinition Height="Auto"/>
+                                    <!-- NIF Emitente -->
+                                    <RowDefinition Height="Auto"/>
+                                    <!-- Ficheiro de Retorno -->
+                                    <RowDefinition Height="Auto"/>
+                                    <!-- Memória -->
+                                </Grid.RowDefinitions>
+
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="1*"/>
+                                    <ColumnDefinition Width="3*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Linha 0: Checkboxes -->
+                                <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.ColumnSpan="2" Margin="0,0,0,10">
+                                    <CheckBox x:Name="TesteCheckBox" Content="Envio de Teste" Margin="0,0,20,0" GotFocus="Campo_GotFocus" MouseEnter="Campo_MouseEnter"/>
+                                    <CheckBox x:Name="AutoFaturacaoCheckBox" Content="Autofaturação" GotFocus="Campo_GotFocus" MouseEnter="Campo_MouseEnter"/>
+                                </StackPanel>
+
+                                <!-- Linha 1: NIF Emitente -->
+                                <TextBlock Text="NIF Emitente" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Margin="0,5"/>
+                                <TextBox x:Name="NifEmitenteTextBox"
+                                         Style="{StaticResource ModernTextBoxStyle}"
+                                         Grid.Row="1" Grid.Column="1"
+                                         Height="32"
+                                         Margin="0,5"
+                                         GotFocus="Campo_GotFocus" MouseEnter="Campo_MouseEnter"/>
+
+                                <!-- Linha 2: Ficheiro de Retorno -->
+                                <TextBlock Text="Ficheiro de Retorno" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Margin="0,5"/>
+                                <DockPanel Grid.Row="2" Grid.Column="1" Margin="0,5">
+                                    <TextBox x:Name="OutputTextBox"
+                                             Style="{StaticResource ModernTextBoxStyle}"
+                                             Height="32"
+                                             Width="380"
+                                             GotFocus="Campo_GotFocus" MouseEnter="Campo_MouseEnter"/>
+                                    <Button Content="..."
+                                            Style="{StaticResource ModernIconButtonStyle}"
+                                            Width="32"
+                                            Height="32"
+                                            Margin="6,0,0,4"
+                                            Click="BrowseOutputFile_Click"/>
+                                </DockPanel>
+
+                                <!-- Linha 3: Memória -->
+                                <TextBlock Text="Memória" Grid.Row="3" Grid.Column="0" VerticalAlignment="Center" Margin="0,5"/>
+                                <TextBox x:Name="MemoriaTextBox"
+                                         Style="{StaticResource ModernTextBoxStyle}"
+                                         Grid.Row="3" Grid.Column="1"
+                                         Height="32"
+                                         Margin="0,5"
+                                         GotFocus="Campo_GotFocus" MouseEnter="Campo_MouseEnter"/>
+                            </Grid>
+                        </GroupBox>
+                    </Grid>
+                </GroupBox>
+            </StackPanel>
+
+            <!-- Coluna Direita (Ajuda/Resultado) -->
+            <Border Grid.Column="1" Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="6">
+                <TabControl x:Name="RightTabControl" Margin="10" Height="500" VerticalAlignment="Top" SelectionChanged="RightTabControl_SelectionChanged">
+                    <TabItem Header="Ajuda">
+                        <Grid Margin="10,10,10,5">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Cabeçalho animado -->
+                            <ContentControl x:Name="HelpHeaderBlock" Grid.Row="0" Opacity="0">
+                                <ContentControl.RenderTransform>
+                                    <TranslateTransform Y="10" />
+                                </ContentControl.RenderTransform>
+                                <TextBlock Text="ℹ Passe o rato ou clique nos campos para ajuda contextual"
+                       Style="{StaticResource HelpHeaderTextStyle}" />
+                            </ContentControl>
+
+                            <!-- Conteúdo principal: Lista de ajuda + logo no fundo -->
+                            <Grid Grid.Row="1">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <!-- Lista de ajuda com scroll -->
+                                <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+                                    <ItemsControl x:Name="HelpList" Margin="0,0,0,10">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Margin="0,0,0,10" Padding="10"
+                                    Background="#EAF4FF" BorderBrush="#D0E3F1" BorderThickness="1" CornerRadius="6">
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding Campo}" FontWeight="SemiBold"/>
+                                                        <TextBlock Text="{Binding Descricao}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                                                    </StackPanel>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </ScrollViewer>
+
+                                <!-- Logotipo fixo no fundo -->
+                                <StackPanel Grid.Row="1" x:Name="LogoContainer"
+                                            Opacity="0" Margin="0,10,0,0" HorizontalAlignment="Center">
+                                    <Image Source="pack://application:,,,/Assets/loading-logo.png"
+                                           Height="50" Stretch="Uniform"
+                                           ToolTip="Visite o nosso site"/>
+                                    <TextBlock x:Name="AppVersionTextBlock"
+                                               FontSize="10"
+                                               Foreground="#0078D7"
+                                               TextAlignment="Center"
+                                               Text="v1.0.3 – loadinghappiness.pt"
+                                               Margin="0,6,0,10"
+                                               Cursor="Hand"
+                                               MouseDown="AbrirSite_Click"/>
+                                </StackPanel>
+                            </Grid>
+                        </Grid>
+                    </TabItem>
+                    <TabItem Header="Resultado">
+                        <Grid>
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <TextBox x:Name="OutputTextBlock"
+                                           TextWrapping="WrapWithOverflow"
+                                           FontFamily="Consolas"
+                                           FontSize="10"
+                                           IsReadOnly="True"
+                                           BorderThickness="0"
+                                           Background="Transparent"
+                                           VerticalScrollBarVisibility="Auto"
+                                           HorizontalScrollBarVisibility="Auto"
+                                           Margin="0"
+                                           VerticalAlignment="Stretch"
+                                           Height="Auto"/>
+                            </ScrollViewer>
+                        </Grid>
+                    </TabItem>
+                    <TabItem Header="Histórico">
+                        <Grid Margin="10">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*"/>
+                                <!-- Grelha -->
+                                <RowDefinition Height="Auto"/>
+                                <!-- Filtros -->
+                            </Grid.RowDefinitions>
+
+                            <DataGrid x:Name="HistoricoDataGrid"
+                                      Grid.Row="0"
+                                      AutoGenerateColumns="False"
+                                      IsReadOnly="True"
+                                      HeadersVisibility="Column"
+                                      GridLinesVisibility="None"
+                                      CanUserAddRows="False"
+                                      RowHeaderWidth="0"
+                                      AlternatingRowBackground="#F3F3F3"
+                                      BorderThickness="0"
+                                      ColumnWidth="*">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Empresa" Binding="{Binding EmpresaNome}" Width="*"/>
+                                    <DataGridTextColumn Header="Ano" Binding="{Binding Ano}" Width="40"/>
+                                    <DataGridTextColumn Header="Mês" Binding="{Binding Mes}" Width="35"/>
+                                    <DataGridTemplateColumn Header="✓" Width="30">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding ResultadoIcone}" 
+                                                           FontSize="14"
+                                                           HorizontalAlignment="Center"
+                                                           VerticalAlignment="Center"
+                                                           Foreground="{Binding ResultadoCor}" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+
+                            <StackPanel Grid.Row="1"
+                                        Orientation="Horizontal"
+                                        HorizontalAlignment="Right"
+                                        Margin="0,10,0,0">
+                                <ComboBox x:Name="EmpresaComboBox"
+                                          Width="140"
+                                          MinWidth="120"
+                                          Margin="0,0,10,0"
+                                          DisplayMemberPath="."
+                                          SelectedValuePath="."
+                                          IsEditable="True"
+                                          ToolTip="Selecionar empresa" />
+                                <Button Content="Filtrar"
+                                        Width="65"
+                                        Style="{StaticResource PrimaryButtonStyle}"
+                                        Click="FiltrarHistorico_Click"/>
+                            </StackPanel>
+                        </Grid>
+                    </TabItem>
+                    <TabItem Header="Sobre">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <StackPanel Margin="20">
+
+                                <!-- Título -->
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="📄" FontSize="22" VerticalAlignment="Center" Margin="0,0,0,10"/>
+                                    <TextBlock Text="Envio SAF-T AT" FontSize="22" FontWeight="Bold" Foreground="#0078D7" Margin="0,0,0,10"/>
+                                </StackPanel>
+
+                                <!-- Parágrafos -->
+                                <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
+                                    Esta aplicação foi desenvolvida para facilitar o envio do ficheiro SAF-T (PT) para a Autoridade Tributária, 
+                                    de acordo com os requisitos legais em vigor em Portugal.
+                                </TextBlock>
+
+                                <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
+                                    ⚠ Esta ferramenta atua como interface gráfica (GUI) para a aplicação oficial da AT — o cliente Java 
+                                    <Run FontWeight="Bold">EnviaSaft.jar</Run>. O ficheiro JAR é necessário e deve estar presente na pasta 
+                                    <Run FontWeight="Bold">libs</Run> para que o envio funcione corretamente.
+                                </TextBlock>
+
+                                <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
+                                    A aplicação oferece uma interface intuitiva com validação de campos, geração automática de parâmetros, 
+                                    pré-preenchimento inteligente de dados e registo histórico dos envios realizados por empresa.
+                                </TextBlock>
+
+                                <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
+                                    Desenvolvido por 
+                                    <Hyperlink NavigateUri="https://loadinghappiness.pt" RequestNavigate="Hyperlink_RequestNavigate">
+                                        Loading Happiness
+                                    </Hyperlink> — tecnologia com coração.
+                                </TextBlock>
+
+                                <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
+                                    Para suporte ou sugestões: 
+                                    <Hyperlink NavigateUri="mailto:suporte@loadinghappiness.pt" RequestNavigate="Hyperlink_RequestNavigate">
+                                        suporte@loadinghappiness.pt
+                                    </Hyperlink>
+                                </TextBlock>
+
+                                <TextBlock TextWrapping="Wrap">
+                                        ℹ Esta aplicação é de distribuição gratuita. Pode ser utilizada livremente, sem custos, por profissionais ou empresas, 
+                                        desde que respeitados os termos de utilização da aplicação oficial da AT.
+                                </TextBlock>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </TabItem>
+                </TabControl>
+            </Border>
+        </Grid>
+
+        <!-- Rodapé com ticker -->
+        <Border x:Name="StatusTickerBorder" Grid.Row="2"
+                Background="#DFF6DD" Padding="12,6"
+                Margin="0" CornerRadius="0"
+                Opacity="0">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock x:Name="StatusTickerIcon"
+                           Text="✅"
+                           FontSize="16"
+                           Margin="0,0,10,0"/>
+                <TextBlock x:Name="StatusTicker"
+                           VerticalAlignment="Center"
+                           FontSize="14"
+                           FontWeight="SemiBold"
+                           Foreground="Green"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>

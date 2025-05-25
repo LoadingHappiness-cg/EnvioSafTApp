@@ -1,0 +1,41 @@
+# Ficheiros do Visual Studio
+.vs/
+*.user
+*.suo
+
+# Ficheiros de build
+bin/
+obj/
+*.log
+
+# Publicações locais
+*.publishsettings
+*.dbmdl
+*.pfx
+*.snk
+
+# Backup do VS
+*_i.c
+*_p.c
+*.cachefile
+*.bak
+
+# Teste e debug
+TestResults/
+*.ncrunch*
+*.vshost.*
+
+# Rider
+.idea/
+*.sln.iml
+
+# Pacotes NuGet
+packages/
+*.nupkg
+*.nuspec
+
+# Dependências locais
+libs/
+
+# Dados de runtime
+HistoricoEnvios/
