@@ -477,7 +477,11 @@ namespace EnvioSafTApp
         private void CarregarHistoricoEnvios()
         {
             var lista = new List<EnvioHistoricoEntry>();
-            string baseFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "HistoricoEnvios");
+            string baseFolder = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "EnviaSaft",
+                "HistoricoEnvios"
+            );
 
             if (Directory.Exists(baseFolder))
             {

@@ -9,7 +9,10 @@ namespace EnvioSafTApp.Services
 {
     public static class HistoricoEnviosService
     {
-        private static readonly string BaseFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "HistoricoEnvios");
+        private static readonly string BaseFolder = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "EnviaSaft",
+            "HistoricoEnvios");
 
         public static void RegistarEnvio(EnvioHistoricoEntry entry)
         {
