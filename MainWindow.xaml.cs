@@ -1,24 +1,25 @@
+using EnvioSafTApp.Models;
+using EnvioSafTApp.Services;
+using Microsoft.Win32;
+using SharpCompress.Archives;
+using SharpCompress.Readers;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media.Animation;
-using System.Windows.Media;
-using Microsoft.Win32;
-using System.Xml;
-using EnvioSafTApp.Models;
-using EnvioSafTApp.Services;
 using System.Windows.Input;
-using System.Threading.Tasks;
-using System.Linq;
-using System.Text.Json;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Media.Media3D;
 using System.Windows.Navigation;
-using SharpCompress.Archives;
-using SharpCompress.Readers;
+using System.Xml;
 
 namespace EnvioSafTApp
 {
@@ -87,9 +88,8 @@ namespace EnvioSafTApp
         {
             if (Keyboard.FocusedElement is DependencyObject focusedElement)
             {
-                // Verifica se o foco está fora dos controles editáveis
-                var parent = VisualTreeHelper.GetParent(focusedElement);
                 bool isInsideForm = false;
+                DependencyObject? parent = focusedElement;
 
                 while (parent != null)
                 {
@@ -98,7 +98,11 @@ namespace EnvioSafTApp
                         isInsideForm = true;
                         break;
                     }
-                    parent = VisualTreeHelper.GetParent(parent);
+
+                    // Usa o VisualTree se possível, senão cai no LogicalTree
+                    parent = parent is Visual || parent is Visual3D
+                        ? VisualTreeHelper.GetParent(parent)
+                        : LogicalTreeHelper.GetParent(parent);
                 }
 
                 if (!isInsideForm && string.IsNullOrWhiteSpace(FicheiroTextBox.Text))

@@ -39,3 +39,7 @@ libs/
 
 # Dados de runtime
 HistoricoEnvios/
+
+# Ignorar instaladores grandes
+Output/
+*.exe
