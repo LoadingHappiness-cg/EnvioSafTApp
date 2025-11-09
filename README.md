@@ -17,7 +17,7 @@
 
 ## 📦 Requisitos
 
-- Java instalado (para correr o `.jar` da AT)
+- Java instalado (para correr o cliente oficial `.jar` da AT — o nome do ficheiro pode variar)
 - .NET 6.0 ou superior
 - Windows 10/11
 
