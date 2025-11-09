@@ -40,41 +40,82 @@
                 <GroupBox Header="Dados do Envio" Style="{StaticResource ModernGroupBoxStyle}" Margin="0,0,0,10">
                     <StackPanel Margin="10">
                         <!-- Linha 1 -->
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                            <StackPanel Width="120" Margin="0,0,20,0">
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="1*" MinWidth="110"/>
+                                <ColumnDefinition Width="1*" MinWidth="110"/>
+                                <ColumnDefinition Width="1.1*" MinWidth="150"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Margin="0,0,20,0">
                                 <TextBlock Text="Ano"/>
-                                <TextBox x:Name="AnoTextBox" Style="{StaticResource ModernTextBoxStyle}" GotFocus="Campo_GotFocus" MouseEnter="Campo_MouseEnter" TextChanged="CampoCorrigido"/>
+                                <TextBox x:Name="AnoTextBox"
+                                         Style="{StaticResource ModernTextBoxStyle}"
+                                         HorizontalAlignment="Stretch"
+                                         MinWidth="110"
+                                         GotFocus="Campo_GotFocus"
+                                         MouseEnter="Campo_MouseEnter"
+                                         TextChanged="CampoCorrigido"/>
                             </StackPanel>
-                            <StackPanel Width="120" Margin="0,0,20,0">
+                            <StackPanel Grid.Column="1" Margin="0,0,20,0">
                                 <TextBlock Text="Mês"/>
-                                <TextBox x:Name="MesTextBox" Style="{StaticResource ModernTextBoxStyle}" GotFocus="Campo_GotFocus" MouseEnter="Campo_MouseEnter" TextChanged="CampoCorrigido"/>
+                                <TextBox x:Name="MesTextBox"
+                                         Style="{StaticResource ModernTextBoxStyle}"
+                                         HorizontalAlignment="Stretch"
+                                         MinWidth="110"
+                                         GotFocus="Campo_GotFocus"
+                                         MouseEnter="Campo_MouseEnter"
+                                         TextChanged="CampoCorrigido"/>
                             </StackPanel>
-                            <StackPanel Width="180">
+                            <StackPanel Grid.Column="2">
                                 <TextBlock Text="Operação"/>
-                                <ComboBox x:Name="OperacaoComboBox" Style="{StaticResource ModernComboBoxStyle}" GotFocus="Campo_GotFocus" MouseEnter="Campo_MouseEnter">
+                                <ComboBox x:Name="OperacaoComboBox"
+                                          Style="{StaticResource ModernComboBoxStyle}"
+                                          HorizontalAlignment="Stretch"
+                                          MinWidth="150"
+                                          GotFocus="Campo_GotFocus"
+                                          MouseEnter="Campo_MouseEnter">
                                     <ComboBoxItem Content="validar"/>
                                     <ComboBoxItem Content="enviar" IsSelected="True"/>
                                 </ComboBox>
                             </StackPanel>
-                        </StackPanel>
+                        </Grid>
 
                         <!-- Linha 2 -->
-                        <StackPanel Orientation="Horizontal">
-                            <StackPanel Width="220" Margin="0,0,20,0">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="1*" MinWidth="160"/>
+                                <ColumnDefinition Width="1*" MinWidth="160"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Margin="0,0,20,0">
                                 <TextBlock Text="NIF"/>
-                                <TextBox x:Name="NifTextBox" Style="{StaticResource ModernTextBoxStyle}" GotFocus="Campo_GotFocus" MouseEnter="Campo_MouseEnter"/>
+                                <TextBox x:Name="NifTextBox"
+                                         Style="{StaticResource ModernTextBoxStyle}"
+                                         HorizontalAlignment="Stretch"
+                                         MinWidth="160"
+                                         GotFocus="Campo_GotFocus"
+                                         MouseEnter="Campo_MouseEnter"/>
                             </StackPanel>
-                            <StackPanel Width="220" Margin="0,0,20,0">
+                            <StackPanel Grid.Column="1" Margin="0,0,20,0">
                                 <TextBlock Text="Password"/>
-                                <PasswordBox x:Name="PasswordBox" Style="{StaticResource ModernPasswordBoxStyle}" GotFocus="Campo_GotFocus" MouseEnter="Campo_MouseEnter"/>
+                                <PasswordBox x:Name="PasswordBox"
+                                             Style="{StaticResource ModernPasswordBoxStyle}"
+                                             HorizontalAlignment="Stretch"
+                                             MinWidth="160"
+                                             GotFocus="Campo_GotFocus"
+                                             MouseEnter="Campo_MouseEnter"/>
                             </StackPanel>
-                            <StackPanel VerticalAlignment="Bottom">
+                            <StackPanel Grid.Column="2"
+                                        VerticalAlignment="Bottom"
+                                        HorizontalAlignment="Right">
                                 <Button x:Name="EnviarButton" Content="Enviar"
-                                        Width="120" Height="32"
+                                        Width="140" Height="36"
                                         Style="{StaticResource PrimaryButtonStyle}"
                                         Click="Enviar_Click"/>
                             </StackPanel>
-                        </StackPanel>
+                        </Grid>
                     </StackPanel>
                 </GroupBox>
 
