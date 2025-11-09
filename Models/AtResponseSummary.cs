@@ -9,6 +9,7 @@ namespace EnvioSafTApp.Models
         public bool Sucesso { get; set; }
         public string Estado { get; set; } = string.Empty;
         public string MensagemPrincipal { get; set; } = string.Empty;
+        public bool RequerAtualizacaoCliente { get; set; }
         public List<string> Erros { get; set; } = new();
         public List<string> Avisos { get; set; } = new();
         public List<string> Codigos { get; set; } = new();
@@ -49,6 +50,12 @@ namespace EnvioSafTApp.Models
                 {
                     sb.AppendLine($" • {codigo}");
                 }
+            }
+
+            if (RequerAtualizacaoCliente && !Erros.Any() && !Avisos.Any())
+            {
+                sb.AppendLine();
+                sb.AppendLine("A AT solicitou a atualização do cliente de comando. Volte a tentar após a conclusão da atualização.");
             }
 
             return sb.ToString().Trim();
