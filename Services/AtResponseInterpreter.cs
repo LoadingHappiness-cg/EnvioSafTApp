@@ -39,6 +39,9 @@ namespace EnvioSafTApp.Services
                 .Where(l => !string.IsNullOrWhiteSpace(l))
                 .ToList();
 
+            bool requiresClientUpdate = false;
+            List<string> clientUpdateMessages = new();
+
             foreach (var linha in linhas.Concat(linhasErro))
             {
                 var codigoMatch = CodigoRegex.Match(linha);
@@ -49,17 +52,44 @@ namespace EnvioSafTApp.Services
 
                 if (IsErroLinha(linha))
                 {
-                    summary.Erros.Add(linha);
+                    requiresClientUpdate = true;
+                    var cleaned = CleanLine(linha);
+                    if (!string.IsNullOrWhiteSpace(cleaned))
+                    {
+                        clientUpdateMessages.Add(cleaned);
+                    }
+                    continue;
+                }
+
+                if (IsErroLinha(linha))
+                {
+                    summary.Erros.Add(CleanLine(linha));
                 }
                 else if (linha.Contains("aviso", StringComparison.OrdinalIgnoreCase) || linha.Contains("warning", StringComparison.OrdinalIgnoreCase))
                 {
-                    summary.Avisos.Add(linha);
+                    summary.Avisos.Add(CleanLine(linha));
                 }
             }
 
             summary.Sucesso = !summary.Erros.Any() && linhas.Any(l => l.Contains("sucesso", StringComparison.OrdinalIgnoreCase) || l.Contains("enviado", StringComparison.OrdinalIgnoreCase));
 
-            if (summary.Sucesso)
+            if (requiresClientUpdate && !summary.Sucesso)
+            {
+                summary.RequerAtualizacaoCliente = true;
+                summary.Estado = "Atualização necessária";
+                var mensagensDistintas = clientUpdateMessages
+                    .Where(m => !string.IsNullOrWhiteSpace(m))
+                    .Select(m => m.Trim())
+                    .Distinct()
+                    .ToList();
+
+                var mensagem = mensagensDistintas.Any()
+                    ? string.Join(" ", mensagensDistintas)
+                    : null;
+
+                summary.MensagemPrincipal = mensagem ?? "A AT solicitou a atualização do cliente de comando. Volte a tentar após a atualização.";
+            }
+            else if (summary.Sucesso)
             {
                 summary.Estado = "Sucesso";
                 summary.MensagemPrincipal = linhas.FirstOrDefault(l => l.Contains("sucesso", StringComparison.OrdinalIgnoreCase)) ?? "Envio concluído.";

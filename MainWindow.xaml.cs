@@ -452,12 +452,33 @@ namespace EnvioSafTApp
                 OutputTextBlock.Text = string.Join(Environment.NewLine + Environment.NewLine, blocos);
 
                 bool sucesso = resumo.Sucesso;
-                string resultadoFinal = isTeste ? "teste" : sucesso ? "sucesso" : "erro";
+                string resultadoFinal = isTeste ? "teste" : resumo.RequerAtualizacaoCliente ? "atualizacao" : sucesso ? "sucesso" : "erro";
 
-                _ticker.ShowMessage(
-                    sucesso ? "Envio realizado com sucesso." : "Erro ao enviar ficheiro.",
-                    sucesso ? TickerMessageType.Success : TickerMessageType.Error
-                );
+                var tickerType = resumo.RequerAtualizacaoCliente
+                    ? TickerMessageType.Warning
+                    : sucesso
+                        ? TickerMessageType.Success
+                        : TickerMessageType.Error;
+
+                string tickerMessage;
+                if (resumo.RequerAtualizacaoCliente)
+                {
+                    tickerMessage = !string.IsNullOrWhiteSpace(resumo.MensagemPrincipal)
+                        ? resumo.MensagemPrincipal
+                        : "A AT solicitou a atualização do cliente de comando. Volte a tentar após a atualização.";
+                }
+                else if (sucesso)
+                {
+                    tickerMessage = "Envio realizado com sucesso.";
+                }
+                else
+                {
+                    tickerMessage = !string.IsNullOrWhiteSpace(resumo.MensagemPrincipal)
+                        ? resumo.MensagemPrincipal
+                        : "Erro ao enviar ficheiro.";
+                }
+
+                _ticker.ShowMessage(tickerMessage, tickerType);
 
                 // Guardar no histórico
                 var entrada = new EnvioHistoricoEntry
@@ -729,9 +750,10 @@ namespace EnvioSafTApp
             int sucesso = lista.Count(e => string.Equals(e.Resultado, "sucesso", StringComparison.OrdinalIgnoreCase));
             int erro = lista.Count(e => string.Equals(e.Resultado, "erro", StringComparison.OrdinalIgnoreCase));
             int teste = lista.Count(e => string.Equals(e.Resultado, "teste", StringComparison.OrdinalIgnoreCase));
+            int atualizacao = lista.Count(e => string.Equals(e.Resultado, "atualizacao", StringComparison.OrdinalIgnoreCase));
 
             var sb = new StringBuilder();
-            sb.AppendLine($"Total: {total} | Sucesso: {sucesso} | Erros: {erro} | Testes: {teste}");
+            sb.AppendLine($"Total: {total} | Sucesso: {sucesso} | Erros: {erro} | Testes: {teste} | Atualizações: {atualizacao}");
             sb.AppendLine($"Taxa de sucesso global: {(total > 0 ? sucesso * 100.0 / total : 0):F1}%");
 
             var melhores = lista
