@@ -9,8 +9,6 @@ namespace EnvioSafTApp.Services
     public static class AtResponseInterpreter
     {
         private static readonly Regex CodigoRegex = new Regex(@"AT[0-9]{4,6}|(?:\b[A-Z]{2}\d{3,}\b)", RegexOptions.IgnoreCase);
-        private static readonly Regex XmlTagRegex = new Regex(@"<[^>]+>");
-        private static readonly Regex ClientUpdateCodeRegex = new Regex(@"code\s*=\s*""-9""", RegexOptions.IgnoreCase);
         private static readonly string[] NonErrorIndicators = new[]
         {
             "sem erro",
@@ -21,14 +19,6 @@ namespace EnvioSafTApp.Services
             "0 erro",
             "0 erros",
             "zero erros"
-        };
-        private static readonly string[] ClientUpdateIndicators = new[]
-        {
-            "necessita de atualizar o cliente de comando",
-            "obtenção do jar",
-            "ser iniciada a obtenção do jar",
-            "nova versão",
-            "obter o jar"
         };
 
         public static AtResponseSummary Interpret(string stdout, string stderr)
@@ -60,10 +50,10 @@ namespace EnvioSafTApp.Services
                     summary.Codigos.Add(codigoMatch.Value);
                 }
 
-                if (IsClientUpdateLine(linha))
+                if (IsErroLinha(linha))
                 {
                     requiresClientUpdate = true;
-                    var cleaned = CleanOutputLine(linha);
+                    var cleaned = CleanLine(linha);
                     if (!string.IsNullOrWhiteSpace(cleaned))
                     {
                         clientUpdateMessages.Add(cleaned);
@@ -73,11 +63,11 @@ namespace EnvioSafTApp.Services
 
                 if (IsErroLinha(linha))
                 {
-                    summary.Erros.Add(CleanOutputLine(linha));
+                    summary.Erros.Add(CleanLine(linha));
                 }
                 else if (linha.Contains("aviso", StringComparison.OrdinalIgnoreCase) || linha.Contains("warning", StringComparison.OrdinalIgnoreCase))
                 {
-                    summary.Avisos.Add(CleanOutputLine(linha));
+                    summary.Avisos.Add(CleanLine(linha));
                 }
             }
 
@@ -157,40 +147,6 @@ namespace EnvioSafTApp.Services
             }
 
             return true;
-        }
-
-        private static bool IsClientUpdateLine(string linha)
-        {
-            if (string.IsNullOrWhiteSpace(linha))
-            {
-                return false;
-            }
-
-            if (ClientUpdateCodeRegex.IsMatch(linha))
-            {
-                return true;
-            }
-
-            foreach (var indicador in ClientUpdateIndicators)
-            {
-                if (linha.IndexOf(indicador, StringComparison.OrdinalIgnoreCase) >= 0)
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        private static string CleanOutputLine(string? linha)
-        {
-            if (string.IsNullOrWhiteSpace(linha))
-            {
-                return string.Empty;
-            }
-
-            var cleaned = XmlTagRegex.Replace(linha, string.Empty);
-            return cleaned.Trim();
         }
     }
 }
