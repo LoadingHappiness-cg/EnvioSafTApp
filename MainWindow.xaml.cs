@@ -460,6 +460,32 @@ namespace EnvioSafTApp
                 if (!string.IsNullOrWhiteSpace(error)) blocos.Add(error.Trim());
                 OutputTextBlock.Text = string.Join(Environment.NewLine + Environment.NewLine, blocos);
 
+                string? savedJarFileName = null;
+                bool jarPersisted = false;
+                if (resumo.RequerAtualizacaoCliente)
+                {
+                    string? updatedJarPath = JarUpdateService.ExtractJarPathFromOutput(output) ?? jarPath;
+                    var persistenceResult = await JarUpdateService.RememberJarAsync(updatedJarPath, CancellationToken.None);
+                    if (!string.IsNullOrWhiteSpace(persistenceResult.SavedPath))
+                    {
+                        savedJarFileName = Path.GetFileName(persistenceResult.SavedPath);
+                        jarPersisted = persistenceResult.IsNew;
+                    }
+                }
+
+                if (jarPersisted && !string.IsNullOrWhiteSpace(savedJarFileName))
+                {
+                    var notaAtualizacao = $"Novo ficheiro do cliente guardado: {savedJarFileName}.";
+                    if (string.IsNullOrWhiteSpace(OutputSummaryTextBlock.Text) || OutputSummaryTextBlock.Text == "Sem informação interpretável.")
+                    {
+                        OutputSummaryTextBlock.Text = notaAtualizacao;
+                    }
+                    else
+                    {
+                        OutputSummaryTextBlock.Text += Environment.NewLine + Environment.NewLine + notaAtualizacao;
+                    }
+                }
+
                 bool sucesso = resumo.Sucesso;
                 string resultadoFinal = isTeste ? "teste" : resumo.RequerAtualizacaoCliente ? "atualizacao" : sucesso ? "sucesso" : "erro";
 
@@ -475,6 +501,11 @@ namespace EnvioSafTApp
                     tickerMessage = !string.IsNullOrWhiteSpace(resumo.MensagemPrincipal)
                         ? resumo.MensagemPrincipal
                         : "A AT solicitou a atualização do cliente de comando. Volte a tentar após a atualização.";
+
+                    if (jarPersisted && !string.IsNullOrWhiteSpace(savedJarFileName))
+                    {
+                        tickerMessage += $" Novo ficheiro guardado: {savedJarFileName}.";
+                    }
                 }
                 else if (sucesso)
                 {
