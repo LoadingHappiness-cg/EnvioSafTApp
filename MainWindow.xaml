@@ -199,8 +199,8 @@
             <Border Grid.Column="1" Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="6">
                 <TabControl x:Name="RightTabControl"
                             Margin="10"
-                            VerticalAlignment="Stretch"
-                            HorizontalAlignment="Stretch"
+                            Height="500"
+                            VerticalAlignment="Top"
                             TabStripPlacement="Top"
                             SelectionChanged="RightTabControl_SelectionChanged">
                     <TabControl.Resources>
