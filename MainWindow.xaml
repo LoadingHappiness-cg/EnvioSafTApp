@@ -28,9 +28,9 @@
         <!-- Conteúdo principal -->
         <Grid Grid.Row="1" Margin="20,16,20,8">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="1.9*" MinWidth="540"/>
+                <ColumnDefinition Width="2.3*" MinWidth="580"/>
                 <ColumnDefinition Width="8"/>
-                <ColumnDefinition Width="2.6*" MinWidth="520"/>
+                <ColumnDefinition Width="2.1*" MinWidth="480"/>
             </Grid.ColumnDefinitions>
 
             <!-- Coluna Esquerda (formulário) -->
@@ -133,22 +133,28 @@
 
                         <!-- Linha 0: Ficheiro SAF-T -->
                         <TextBlock Text="Ficheiro SAF-T" Grid.Row="0" Margin="0,0,0,6"/>
-                        <DockPanel Grid.Row="0" Margin="0,20,0,20">
+                        <Grid Grid.Row="0" Margin="0,20,0,20">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
                             <TextBox x:Name="FicheiroTextBox"
                                      Style="{StaticResource ModernTextBoxStyle}"
                                      Height="36"
-                                     Width="560"
-                                     MaxWidth="560"
                                      VerticalAlignment="Center"
+                                     HorizontalAlignment="Stretch"
+                                     MinWidth="320"
+                                     Grid.Column="0"
                                      GotFocus="Campo_GotFocus" MouseEnter="Campo_MouseEnter"/>
                             <Button Content="..."
                                     Style="{StaticResource ModernIconButtonStyle}"
                                     Width="36"
                                     Height="36"
                                     Margin="6,0,0,4"
+                                    Grid.Column="1"
                                     Click="BrowseFile_Click"
                                     VerticalAlignment="Center"/>
-                        </DockPanel>
+                        </Grid>
 
                         <!-- Linha 1: Opções Avançadas -->
                         <GroupBox Header="Opções Avançadas" Style="{StaticResource ModernGroupBoxStyle}" Grid.Row="1">
@@ -199,19 +205,26 @@
 
                                 <!-- Linha 3: Ficheiro de Retorno -->
                                 <TextBlock Text="Ficheiro de Retorno" Grid.Row="3" Grid.Column="0" VerticalAlignment="Center" Margin="0,5"/>
-                                <DockPanel Grid.Row="3" Grid.Column="1" Margin="0,5">
+                                <Grid Grid.Row="3" Grid.Column="1" Margin="0,5">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
                                     <TextBox x:Name="OutputTextBox"
                                              Style="{StaticResource ModernTextBoxStyle}"
                                              Height="32"
-                                             Width="380"
+                                             MinWidth="240"
+                                             HorizontalAlignment="Stretch"
+                                             Grid.Column="0"
                                              GotFocus="Campo_GotFocus" MouseEnter="Campo_MouseEnter"/>
                                     <Button Content="..."
                                             Style="{StaticResource ModernIconButtonStyle}"
                                             Width="32"
                                             Height="32"
                                             Margin="6,0,0,4"
+                                            Grid.Column="1"
                                             Click="BrowseOutputFile_Click"/>
-                                </DockPanel>
+                                </Grid>
 
                                 <!-- Linha 4: Memória -->
                                 <TextBlock Text="Memória" Grid.Row="4" Grid.Column="0" VerticalAlignment="Center" Margin="0,5"/>
@@ -601,16 +614,19 @@
                                                  ToolTip="Filtrar por etiquetas (separar por vírgulas)"
                                                  TextChanged="FiltroHistorico_TextChanged"/>
                                     </WrapPanel>
-                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                    <UniformGrid Columns="2" HorizontalAlignment="Stretch" Margin="0">
                                         <Button Content="Exportar CSV"
                                                 Style="{StaticResource SecondaryButtonStyle}"
                                                 Margin="0,0,10,0"
+                                                Height="40"
+                                                HorizontalAlignment="Stretch"
                                                 Click="ExportarHistorico_Click"/>
                                         <Button Content="Limpar filtros"
                                                 Style="{StaticResource SecondaryButtonStyle}"
-                                                Margin="0,0,10,0"
+                                                Height="40"
+                                                HorizontalAlignment="Stretch"
                                                 Click="LimparFiltrosHistorico_Click"/>
-                                    </StackPanel>
+                                    </UniformGrid>
                                 </StackPanel>
                             </GroupBox>
                         </Grid>
