@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -17,6 +18,7 @@ namespace EnvioSafTApp.Services
         private const string MetadataFileName = "EnviaSaft.jar.metadata.json";
         private static readonly Uri JarDownloadUri = new("https://www.portaldasfinancas.gov.pt/static/docs/factemi/EnviaSaft.jar");
         private static readonly HttpClient HttpClient = CreateClient();
+        private static readonly Regex JarExecutionRegex = new(@"java\s+-jar\s+(?:(['\"])(?<path>[^'\"]+)\1|(?<path>[^\s]+))", RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
         private static HttpClient CreateClient()
         {
@@ -37,6 +39,11 @@ namespace EnvioSafTApp.Services
             string metadataPath = Path.Combine(libsFolder, MetadataFileName);
             JarMetadata? metadata = await LoadMetadataAsync(metadataPath, cancellationToken);
             string jarPath = ResolveExistingJarPath(libsFolder, metadata);
+
+            if (File.Exists(jarPath))
+            {
+                metadata = await EnsureMetadataMatchesLocalJarAsync(metadataPath, metadata, jarPath, cancellationToken);
+            }
 
             var result = new JarUpdateResult
             {
@@ -118,6 +125,10 @@ namespace EnvioSafTApp.Services
             {
                 jarPath = ResolveExistingJarPath(libsFolder, metadata);
                 result.JarPath = jarPath;
+                if (File.Exists(jarPath))
+                {
+                    metadata = await EnsureMetadataMatchesLocalJarAsync(metadataPath, metadata, jarPath, cancellationToken);
+                }
                 result.Success = File.Exists(jarPath);
                 result.UsedFallback = result.Success;
                 result.Updated = false;
@@ -214,7 +225,7 @@ namespace EnvioSafTApp.Services
             var metadata = new JarMetadata
             {
                 ETag = response.Headers.ETag?.Tag,
-                LastModified = response.Content.Headers.LastModified,
+                LastModified = response.Content.Headers.LastModified ?? GetFileLastWriteTimeUtc(jarPath),
                 FileName = fileName
             };
 
@@ -262,6 +273,161 @@ namespace EnvioSafTApp.Services
         {
             await using var stream = File.Open(metadataPath, FileMode.Create, FileAccess.Write, FileShare.None);
             await JsonSerializer.SerializeAsync(stream, metadata, new JsonSerializerOptions { WriteIndented = true }, cancellationToken);
+        }
+
+        public static string? ExtractJarPathFromOutput(string? output)
+        {
+            if (string.IsNullOrWhiteSpace(output))
+            {
+                return null;
+            }
+
+            string? lastPath = null;
+            foreach (Match match in JarExecutionRegex.Matches(output))
+            {
+                if (match.Success)
+                {
+                    var candidate = match.Groups["path"].Value;
+                    if (!string.IsNullOrWhiteSpace(candidate))
+                    {
+                        lastPath = candidate.Trim();
+                    }
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(lastPath))
+            {
+                return null;
+            }
+
+            return NormalizePath(lastPath);
+        }
+
+        public static async Task<(string? SavedPath, bool IsNew)> RememberJarAsync(string? jarPath, CancellationToken cancellationToken)
+        {
+            string? normalized = NormalizePath(jarPath);
+            if (string.IsNullOrWhiteSpace(normalized) || !File.Exists(normalized))
+            {
+                return (null, false);
+            }
+
+            string libsFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "libs");
+            Directory.CreateDirectory(libsFolder);
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            string metadataPath = Path.Combine(libsFolder, MetadataFileName);
+            JarMetadata? existingMetadata = LoadMetadata(metadataPath);
+            string fileName = Path.GetFileName(normalized);
+            if (string.IsNullOrWhiteSpace(fileName))
+            {
+                return (null, false);
+            }
+
+            string destinationPath = Path.Combine(libsFolder, fileName);
+            string? originalPath = normalized;
+            bool existedBefore = File.Exists(destinationPath);
+
+            if (!PathsAreSame(normalized, destinationPath))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                File.Copy(normalized, destinationPath, overwrite: true);
+                normalized = destinationPath;
+            }
+            else
+            {
+                destinationPath = normalized;
+            }
+
+            var metadata = new JarMetadata
+            {
+                FileName = Path.GetFileName(destinationPath),
+                LastModified = GetFileLastWriteTimeUtc(destinationPath)
+            };
+
+            bool metadataChanged = existingMetadata == null
+                || !string.Equals(existingMetadata.FileName, metadata.FileName, StringComparison.OrdinalIgnoreCase)
+                || existingMetadata.LastModified != metadata.LastModified;
+
+            await SaveMetadataAsync(metadataPath, metadata, cancellationToken);
+            bool changedLocation = !string.IsNullOrWhiteSpace(originalPath) && !PathsAreSame(originalPath, destinationPath);
+            bool isNew = !existedBefore || changedLocation || metadataChanged;
+            return (destinationPath, isNew);
+        }
+
+        private static async Task<JarMetadata?> EnsureMetadataMatchesLocalJarAsync(string metadataPath, JarMetadata? currentMetadata, string jarPath, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            string fileName = Path.GetFileName(jarPath);
+            if (string.IsNullOrWhiteSpace(fileName))
+            {
+                return currentMetadata;
+            }
+
+            if (currentMetadata != null && string.Equals(currentMetadata.FileName, fileName, StringComparison.OrdinalIgnoreCase))
+            {
+                return currentMetadata;
+            }
+
+            var metadata = new JarMetadata
+            {
+                FileName = fileName,
+                LastModified = GetFileLastWriteTimeUtc(jarPath)
+            };
+
+            await SaveMetadataAsync(metadataPath, metadata, cancellationToken);
+            return metadata;
+        }
+
+        private static DateTimeOffset? GetFileLastWriteTimeUtc(string path)
+        {
+            try
+            {
+                var lastWrite = File.GetLastWriteTimeUtc(path);
+                if (lastWrite <= DateTime.MinValue || lastWrite >= DateTime.MaxValue)
+                {
+                    return null;
+                }
+
+                return new DateTimeOffset(DateTime.SpecifyKind(lastWrite, DateTimeKind.Utc));
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private static string? NormalizePath(string? path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                return null;
+            }
+
+            try
+            {
+                string expanded = Environment.ExpandEnvironmentVariables(path.Trim());
+                return Path.GetFullPath(expanded);
+            }
+            catch
+            {
+                return path.Trim();
+            }
+        }
+
+        private static bool PathsAreSame(string first, string second)
+        {
+            try
+            {
+                string normalizedFirst = Path.GetFullPath(first).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                string normalizedSecond = Path.GetFullPath(second).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                return string.Equals(normalizedFirst, normalizedSecond, StringComparison.OrdinalIgnoreCase);
+            }
+            catch
+            {
+                return string.Equals(first, second, StringComparison.OrdinalIgnoreCase);
+            }
         }
 
         public static string GetLocalJarPath()
