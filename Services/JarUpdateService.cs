@@ -16,9 +16,9 @@ namespace EnvioSafTApp.Services
     {
         private const string DefaultJarFileName = "EnviaSaft.jar";
         private const string MetadataFileName = "EnviaSaft.jar.metadata.json";
-        private static readonly Uri JarDownloadUri = new("https://www.portaldasfinancas.gov.pt/static/docs/factemi/EnviaSaft.jar");
+        private static readonly Uri JarDownloadUri = new Uri("https://www.portaldasfinancas.gov.pt/static/docs/factemi/EnviaSaft.jar");
         private static readonly HttpClient HttpClient = CreateClient();
-        private static readonly Regex JarExecutionRegex = new(@"java\s+-jar\s+(?:(['\"])(?<path>[^'\"]+)\1|(?<path>[^\s]+))", RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.CultureInvariant);
+        private static readonly Regex JarExecutionRegex = new Regex(@"java\s+-jar\s+(?:(['"])(?<path>[^'"]+)\1|(?<path>[^\s]+))", RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
         private static HttpClient CreateClient()
         {
