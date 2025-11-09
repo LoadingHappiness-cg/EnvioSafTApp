@@ -380,9 +380,11 @@ namespace EnvioSafTApp
 
             var jarUpdateResult = await JarUpdateService.EnsureLatestAsync(CancellationToken.None);
 
+            string jarFileName = Path.GetFileName(jarUpdateResult.JarPath);
+
             if (!jarUpdateResult.Success)
             {
-                var message = jarUpdateResult.Message ?? "Não foi possível preparar o EnviaSaft.jar.";
+                var message = jarUpdateResult.Message ?? $"Não foi possível preparar o {jarFileName}.";
                 _ticker.ShowMessage(message, jarUpdateResult.UsedFallback ? TickerMessageType.Warning : TickerMessageType.Error);
 
                 if (!jarUpdateResult.UsedFallback)
@@ -394,11 +396,11 @@ namespace EnvioSafTApp
             {
                 if (jarUpdateResult.Updated)
                 {
-                    _ticker.ShowMessage(jarUpdateResult.Message ?? "Foi descarregada a versão mais recente do EnviaSaft.jar.", TickerMessageType.Info);
+                    _ticker.ShowMessage(jarUpdateResult.Message ?? $"Foi descarregada a versão mais recente do {jarFileName}.", TickerMessageType.Info);
                 }
                 else if (jarUpdateResult.UsedFallback)
                 {
-                    var message = jarUpdateResult.Message ?? "Não foi possível confirmar atualizações do EnviaSaft.jar; a versão local será utilizada.";
+                    var message = jarUpdateResult.Message ?? $"Não foi possível confirmar atualizações do {jarFileName}; a versão local será utilizada.";
                     _ticker.ShowMessage(message, TickerMessageType.Warning);
                 }
             }
@@ -408,7 +410,7 @@ namespace EnvioSafTApp
 
             if (!File.Exists(jarPath))
             {
-                _ticker.ShowMessage("O ficheiro EnviaSaft.jar não está disponível após a tentativa de atualização.", TickerMessageType.Error);
+                _ticker.ShowMessage($"O ficheiro {jarFileName} não está disponível após a tentativa de atualização.", TickerMessageType.Error);
                 return;
             }
 

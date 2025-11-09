@@ -449,9 +449,9 @@
                                 </TextBlock>
 
                                 <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
-                                    ⚠ Esta ferramenta atua como interface gráfica (GUI) para a aplicação oficial da AT — o cliente Java 
-                                    <Run FontWeight="Bold">EnviaSaft.jar</Run>. O ficheiro JAR é necessário e deve estar presente na pasta 
-                                    <Run FontWeight="Bold">libs</Run> para que o envio funcione corretamente.
+                                    ⚠ Esta ferramenta atua como interface gráfica (GUI) para a aplicação oficial da AT — o cliente Java
+                                    <Run FontWeight="Bold">FactemiCLI</Run>. O ficheiro <Run FontWeight="Bold">.jar</Run> disponibilizado pela AT (o nome pode variar)
+                                    é necessário e deve estar presente na pasta <Run FontWeight="Bold">libs</Run> para que o envio funcione corretamente.
                                 </TextBlock>
 
                                 <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">

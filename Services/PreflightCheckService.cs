@@ -78,15 +78,20 @@ namespace EnvioSafTApp.Services
 
         private static PreflightCheckResult VerificarJar()
         {
-            string jarPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "libs", "EnviaSaft.jar");
+            string jarPath = JarUpdateService.GetLocalJarPath();
             bool existe = File.Exists(jarPath);
+            string fileName = Path.GetFileName(jarPath);
 
             return new PreflightCheckResult
             {
-                Nome = "EnviaSaft.jar",
+                Nome = string.IsNullOrWhiteSpace(fileName) ? "Aplicação de envio da AT" : fileName,
                 Sucesso = existe,
-                Detalhes = existe ? $"Encontrado em {jarPath}" : "O ficheiro EnviaSaft.jar não foi encontrado na pasta 'libs'.",
-                ResolucaoSugerida = existe ? string.Empty : "Copie o ficheiro EnviaSaft.jar fornecido pela AT para a pasta 'libs' da aplicação."
+                Detalhes = existe
+                    ? $"Encontrado em {jarPath}"
+                    : "O ficheiro da aplicação oficial da AT não foi encontrado na pasta 'libs'.",
+                ResolucaoSugerida = existe
+                    ? string.Empty
+                    : "Copie o ficheiro .jar fornecido pela AT para a pasta 'libs' da aplicação (sem necessidade de renomear)."
             };
         }
 
