@@ -32,6 +32,29 @@
 
 ---
 
+## 🛠️ Desenvolvimento
+
+- Requer o .NET 8 SDK e uma máquina Windows (a aplicação usa WPF).
+- Requer Java para executar o cliente oficial da AT.
+
+Se o comando `dotnet` não estiver disponível no seu ambiente de desenvolvimento ou de CI pode usar o script `scripts/install-dotnet.sh`:
+
+```bash
+# Instala o SDK 8.0 (omissão) em ~/.dotnet
+scripts/install-dotnet.sh
+
+# (Opcional) instala outro canal, por exemplo 7.0
+scripts/install-dotnet.sh 7.0
+
+# Depois de executar o script adicione o SDK ao PATH
+export DOTNET_ROOT="$HOME/.dotnet"
+export PATH="$DOTNET_ROOT:$PATH"
+```
+
+Se estiver atrás de um proxy HTTP/HTTPS configure `HTTP_PROXY` e `HTTPS_PROXY` antes de correr o script.
+
+---
+
 ## 🆓 Licença
 
 Distribuição gratuita. Desenvolvido por [Loading Happiness](https://www.loadinghappiness.pt).
