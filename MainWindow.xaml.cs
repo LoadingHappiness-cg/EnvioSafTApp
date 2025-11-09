@@ -32,6 +32,7 @@ namespace EnvioSafTApp
         private string? _pastaTemporaria;
         private AtResponseSummary? _ultimoResumo;
         private bool _historicoInicializado;
+        private string? _ultimoLogPath;
 
         public MainWindow()
         {
@@ -44,6 +45,7 @@ namespace EnvioSafTApp
             MostrarLogoComAnimacao();
             this.PreviewMouseDown += Window_PreviewMouseDown;
             this.Loaded += MainWindow_Loaded;
+            AtualizarEstadoBotoesResultado();
         }
 
         private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
@@ -223,15 +225,19 @@ namespace EnvioSafTApp
 
         private void RightTabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            var selected = (RightTabControl.SelectedItem as TabItem)?.Header?.ToString();
-
-            if (selected == "Histórico")
+            if (RightTabControl.SelectedItem is not TabItem tabItem)
             {
-                CarregarHistoricoEnvios(); // ou outro método que usares
+                return;
             }
-            else if (selected == "Resultado")
+
+            if (Equals(tabItem, HistoricoTab))
             {
-                OutputTextBlock.ScrollToEnd(); // ou outro comportamento
+                CarregarHistoricoEnvios();
+            }
+            else if (Equals(tabItem, ResultadoTab))
+            {
+                OutputTextBlock.ScrollToEnd();
+                AtualizarEstadoBotoesResultado();
             }
         }
 
@@ -295,7 +301,7 @@ namespace EnvioSafTApp
                 }
             }
 
-            SelecionarTab("Ajuda");
+            SelecionarTab(nameof(AjudaTab));
         }
 
         private void LimparPastaTemporaria()
@@ -337,11 +343,12 @@ namespace EnvioSafTApp
             }
         }
 
-        private void SelecionarTab(string header)
+        private void SelecionarTab(string identifier)
         {
             foreach (var item in RightTabControl.Items.OfType<TabItem>())
             {
-                if (string.Equals(item.Header?.ToString(), header, StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(item.Name, identifier, StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(item.Header as string, identifier, StringComparison.OrdinalIgnoreCase))
                 {
                     item.IsSelected = true;
                     break;
@@ -416,7 +423,9 @@ namespace EnvioSafTApp
 
             OutputTextBlock.Text = ""; // Limpa output anterior
             OutputSummaryTextBlock.Text = string.Empty;
-            SelecionarTab("Resultado");
+            _ultimoLogPath = null;
+            AtualizarEstadoBotoesResultado();
+            SelecionarTab(nameof(ResultadoTab));
 
             try
             {
@@ -497,6 +506,7 @@ namespace EnvioSafTApp
                 };
 
                 entrada.LogFilePath = HistoricoEnviosService.GuardarLog(entrada, resumoLegivel, output, error);
+                _ultimoLogPath = entrada.LogFilePath;
                 HistoricoEnviosService.RegistarEnvio(entrada);
 
                 if (_historicoInicializado)
@@ -512,6 +522,7 @@ namespace EnvioSafTApp
             finally
             {
                 LimparPastaTemporaria();
+                AtualizarEstadoBotoesResultado();
             }
         }
 
@@ -873,6 +884,80 @@ namespace EnvioSafTApp
                 UseShellExecute = true
             });
             e.Handled = true;
+        }
+
+        private void CopiarResultado_Click(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(OutputTextBlock.Text))
+            {
+                _ticker.ShowMessage("Não existe output para copiar.", TickerMessageType.Warning);
+                return;
+            }
+
+            try
+            {
+                Clipboard.SetText(OutputTextBlock.Text);
+                _ticker.ShowMessage("Resultado copiado para a área de transferência.", TickerMessageType.Success);
+            }
+            catch (Exception ex)
+            {
+                _ticker.ShowMessage($"Não foi possível copiar: {ex.Message}", TickerMessageType.Error);
+            }
+        }
+
+        private void LimparResultado_Click(object sender, RoutedEventArgs e)
+        {
+            OutputTextBlock.Clear();
+            OutputSummaryTextBlock.Text = string.Empty;
+            _ultimoResumo = null;
+            _ultimoLogPath = null;
+            AtualizarEstadoBotoesResultado();
+            _ticker.ShowMessage("Painel de resultados limpo.", TickerMessageType.Info);
+        }
+
+        private void AbrirUltimoLog_Click(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(_ultimoLogPath) || !File.Exists(_ultimoLogPath))
+            {
+                _ticker.ShowMessage("Nenhum log recente disponível para abrir.", TickerMessageType.Warning);
+                AtualizarEstadoBotoesResultado();
+                return;
+            }
+
+            try
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = _ultimoLogPath,
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception ex)
+            {
+                _ticker.ShowMessage($"Não foi possível abrir o log: {ex.Message}", TickerMessageType.Error);
+            }
+        }
+
+        private void AtualizarEstadoBotoesResultado()
+        {
+            bool temOutput = !string.IsNullOrWhiteSpace(OutputTextBlock.Text);
+            bool temResumo = !string.IsNullOrWhiteSpace(OutputSummaryTextBlock.Text);
+            bool logDisponivel = !string.IsNullOrWhiteSpace(_ultimoLogPath) && File.Exists(_ultimoLogPath);
+
+            if (CopiarResultadoButton != null)
+            {
+                CopiarResultadoButton.IsEnabled = temOutput;
+            }
+
+            if (LimparResultadoButton != null)
+            {
+                LimparResultadoButton.IsEnabled = temOutput || temResumo;
+            }
+
+            if (AbrirLogButton != null)
+            {
+                AbrirLogButton.IsEnabled = logDisponivel;
+            }
         }
     }
 }
