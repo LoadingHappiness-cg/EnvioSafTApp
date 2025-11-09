@@ -414,8 +414,6 @@ namespace EnvioSafTApp
                 return;
             }
 
-            string args = ConstruirArgumentosEnvio(jarPath, nif, password, ano, mes, op, ficheiro, updatePath, memoria, isTeste, isAf, nifEmitente, outputPath);
-
             OutputTextBlock.Text = ""; // Limpa output anterior
             OutputSummaryTextBlock.Text = string.Empty;
             SelecionarTab("Resultado");
@@ -425,13 +423,7 @@ namespace EnvioSafTApp
                 var dataEnvio = DateTime.Now;
                 var resultado = await Task.Run(() =>
                 {
-                    var psi = new ProcessStartInfo("java", args)
-                    {
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        UseShellExecute = false,
-                        CreateNoWindow = true
-                    };
+                    var psi = CriarProcessoEnvio(jarPath, nif, password, ano, mes, op, ficheiro, updatePath, memoria, isTeste, isAf, nifEmitente, outputPath);
 
                     using var proc = Process.Start(psi);
                     if (proc == null)
@@ -502,7 +494,7 @@ namespace EnvioSafTApp
             }
         }
 
-        private string ConstruirArgumentosEnvio(
+        private ProcessStartInfo CriarProcessoEnvio(
             string jarPath,
             string nif,
             string password,
@@ -517,26 +509,63 @@ namespace EnvioSafTApp
             string nifEmitente,
             string outputPath)
         {
-            var args = new StringBuilder();
+            var psi = new ProcessStartInfo("java")
+            {
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
 
             if (!string.IsNullOrWhiteSpace(memoria))
-                args.Append($"{memoria} ");
+            {
+                foreach (var argumentoMemoria in memoria
+                             .Split(' ', StringSplitOptions.RemoveEmptyEntries))
+                {
+                    psi.ArgumentList.Add(argumentoMemoria);
+                }
+            }
 
-            args.Append($"-jar \"{jarPath}\" -n {nif} -p {password} -a {ano} -m {mes} -op {op} -i \"{ficheiro}\" -c \"{updatePath}\"");
+            psi.ArgumentList.Add("-jar");
+            psi.ArgumentList.Add(jarPath);
+            psi.ArgumentList.Add("-n");
+            psi.ArgumentList.Add(nif);
+            psi.ArgumentList.Add("-p");
+            psi.ArgumentList.Add(password);
+            psi.ArgumentList.Add("-a");
+            psi.ArgumentList.Add(ano);
+            psi.ArgumentList.Add("-m");
+            psi.ArgumentList.Add(mes);
+            psi.ArgumentList.Add("-op");
+            psi.ArgumentList.Add(op);
+            psi.ArgumentList.Add("-i");
+            psi.ArgumentList.Add(ficheiro);
+            psi.ArgumentList.Add("-c");
+            psi.ArgumentList.Add(updatePath);
 
             if (isTeste)
-                args.Append(" -t");
+            {
+                psi.ArgumentList.Add("-t");
+            }
 
             if (isAf)
-                args.Append(" -af");
+            {
+                psi.ArgumentList.Add("-af");
+            }
 
             if (!string.IsNullOrWhiteSpace(nifEmitente))
-                args.Append($" -ea {nifEmitente}");
+            {
+                psi.ArgumentList.Add("-ea");
+                psi.ArgumentList.Add(nifEmitente);
+            }
 
             if (!string.IsNullOrWhiteSpace(outputPath))
-                args.Append($" -o \"{outputPath}\"");
+            {
+                psi.ArgumentList.Add("-o");
+                psi.ArgumentList.Add(outputPath);
+            }
 
-            return args.ToString();
+            return psi;
         }
 
         private void PreencherCamposDoFicheiroSafT(string caminho)

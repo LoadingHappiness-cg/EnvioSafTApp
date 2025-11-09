@@ -9,6 +9,17 @@ namespace EnvioSafTApp.Services
     public static class AtResponseInterpreter
     {
         private static readonly Regex CodigoRegex = new Regex(@"AT[0-9]{4,6}|(?:\b[A-Z]{2}\d{3,}\b)", RegexOptions.IgnoreCase);
+        private static readonly string[] NonErrorIndicators = new[]
+        {
+            "sem erro",
+            "sem erros",
+            "sem qualquer erro",
+            "sem nenhum erro",
+            "nenhum erro",
+            "0 erro",
+            "0 erros",
+            "zero erros"
+        };
 
         public static AtResponseSummary Interpret(string stdout, string stderr)
         {
@@ -36,7 +47,7 @@ namespace EnvioSafTApp.Services
                     summary.Codigos.Add(codigoMatch.Value);
                 }
 
-                if (linha.Contains("erro", StringComparison.OrdinalIgnoreCase))
+                if (IsErroLinha(linha))
                 {
                     summary.Erros.Add(linha);
                 }
@@ -70,6 +81,42 @@ namespace EnvioSafTApp.Services
             }
 
             return summary;
+        }
+
+        private static bool IsErroLinha(string linha)
+        {
+            if (string.IsNullOrWhiteSpace(linha))
+            {
+                return false;
+            }
+
+            var texto = linha.Trim();
+            if (!texto.Contains("erro", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            var textoLower = texto.ToLowerInvariant();
+
+            foreach (var indicador in NonErrorIndicators)
+            {
+                if (textoLower.Contains(indicador))
+                {
+                    return false;
+                }
+            }
+
+            if (Regex.IsMatch(textoLower, @"erros?\s*[:=\-]\s*0"))
+            {
+                return false;
+            }
+
+            if (Regex.IsMatch(textoLower, @"0\s+erros?"))
+            {
+                return false;
+            }
+
+            return true;
         }
     }
 }
