@@ -28,6 +28,7 @@ namespace EnvioSafTApp.Models
             "sucesso" => "✅",
             "erro" => "❌",
             "teste" => "🧪", // ou "T" se preferires letra
+            "atualizacao" => "🔄",
             _ => "❓"
         };
 
@@ -37,6 +38,7 @@ namespace EnvioSafTApp.Models
             "sucesso" => Brushes.Green,
             "erro" => Brushes.Red,
             "teste" => Brushes.DarkOrange,
+            "atualizacao" => Brushes.Goldenrod,
             _ => Brushes.Gray
         };
 

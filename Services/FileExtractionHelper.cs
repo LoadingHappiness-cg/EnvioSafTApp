@@ -95,7 +95,13 @@ namespace EnvioSafTApp.Services
                     throw new InvalidOperationException("O arquivo está protegido por palavra-passe. Indique a password na aplicação para proceder à extração.");
                 }
 
-                string destino = Path.Combine(pastaDestino, reader.Entry.Key);
+                var entryKey = reader.Entry.Key;
+                if (string.IsNullOrWhiteSpace(entryKey))
+                {
+                    entryKey = $"entrada_sem_nome_{Guid.NewGuid():N}";
+                }
+
+                string destino = Path.Combine(pastaDestino, entryKey);
                 Directory.CreateDirectory(Path.GetDirectoryName(destino) ?? pastaDestino);
 
                 reader.WriteEntryToFile(destino, new ExtractionOptions
