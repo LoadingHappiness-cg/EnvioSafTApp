@@ -32,6 +32,7 @@ namespace EnvioSafTApp
         private string? _pastaTemporaria;
         private AtResponseSummary? _ultimoResumo;
         private bool _historicoInicializado;
+        private string? _ultimoLogPath;
 
         public MainWindow()
         {
@@ -44,6 +45,7 @@ namespace EnvioSafTApp
             MostrarLogoComAnimacao();
             this.PreviewMouseDown += Window_PreviewMouseDown;
             this.Loaded += MainWindow_Loaded;
+            AtualizarEstadoBotoesResultado();
         }
 
         private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
@@ -223,15 +225,19 @@ namespace EnvioSafTApp
 
         private void RightTabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            var selected = (RightTabControl.SelectedItem as TabItem)?.Header?.ToString();
-
-            if (selected == "Histórico")
+            if (RightTabControl.SelectedItem is not TabItem tabItem)
             {
-                CarregarHistoricoEnvios(); // ou outro método que usares
+                return;
             }
-            else if (selected == "Resultado")
+
+            if (Equals(tabItem, HistoricoTab))
             {
-                OutputTextBlock.ScrollToEnd(); // ou outro comportamento
+                CarregarHistoricoEnvios();
+            }
+            else if (Equals(tabItem, ResultadoTab))
+            {
+                OutputTextBlock.ScrollToEnd();
+                AtualizarEstadoBotoesResultado();
             }
         }
 
@@ -295,7 +301,7 @@ namespace EnvioSafTApp
                 }
             }
 
-            SelecionarTab("Ajuda");
+            SelecionarTab(nameof(AjudaTab));
         }
 
         private void LimparPastaTemporaria()
@@ -337,11 +343,12 @@ namespace EnvioSafTApp
             }
         }
 
-        private void SelecionarTab(string header)
+        private void SelecionarTab(string identifier)
         {
             foreach (var item in RightTabControl.Items.OfType<TabItem>())
             {
-                if (string.Equals(item.Header?.ToString(), header, StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(item.Name, identifier, StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(item.Header as string, identifier, StringComparison.OrdinalIgnoreCase))
                 {
                     item.IsSelected = true;
                     break;
@@ -414,24 +421,18 @@ namespace EnvioSafTApp
                 return;
             }
 
-            string args = ConstruirArgumentosEnvio(jarPath, nif, password, ano, mes, op, ficheiro, updatePath, memoria, isTeste, isAf, nifEmitente, outputPath);
-
             OutputTextBlock.Text = ""; // Limpa output anterior
             OutputSummaryTextBlock.Text = string.Empty;
-            SelecionarTab("Resultado");
+            _ultimoLogPath = null;
+            AtualizarEstadoBotoesResultado();
+            SelecionarTab(nameof(ResultadoTab));
 
             try
             {
                 var dataEnvio = DateTime.Now;
                 var resultado = await Task.Run(() =>
                 {
-                    var psi = new ProcessStartInfo("java", args)
-                    {
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        UseShellExecute = false,
-                        CreateNoWindow = true
-                    };
+                    var psi = CriarProcessoEnvio(jarPath, nif, password, ano, mes, op, ficheiro, updatePath, memoria, isTeste, isAf, nifEmitente, outputPath);
 
                     using var proc = Process.Start(psi);
                     if (proc == null)
@@ -460,12 +461,33 @@ namespace EnvioSafTApp
                 OutputTextBlock.Text = string.Join(Environment.NewLine + Environment.NewLine, blocos);
 
                 bool sucesso = resumo.Sucesso;
-                string resultadoFinal = isTeste ? "teste" : sucesso ? "sucesso" : "erro";
+                string resultadoFinal = isTeste ? "teste" : resumo.RequerAtualizacaoCliente ? "atualizacao" : sucesso ? "sucesso" : "erro";
 
-                _ticker.ShowMessage(
-                    sucesso ? "Envio realizado com sucesso." : "Erro ao enviar ficheiro.",
-                    sucesso ? TickerMessageType.Success : TickerMessageType.Error
-                );
+                var tickerType = resumo.RequerAtualizacaoCliente
+                    ? TickerMessageType.Warning
+                    : sucesso
+                        ? TickerMessageType.Success
+                        : TickerMessageType.Error;
+
+                string tickerMessage;
+                if (resumo.RequerAtualizacaoCliente)
+                {
+                    tickerMessage = !string.IsNullOrWhiteSpace(resumo.MensagemPrincipal)
+                        ? resumo.MensagemPrincipal
+                        : "A AT solicitou a atualização do cliente de comando. Volte a tentar após a atualização.";
+                }
+                else if (sucesso)
+                {
+                    tickerMessage = "Envio realizado com sucesso.";
+                }
+                else
+                {
+                    tickerMessage = !string.IsNullOrWhiteSpace(resumo.MensagemPrincipal)
+                        ? resumo.MensagemPrincipal
+                        : "Erro ao enviar ficheiro.";
+                }
+
+                _ticker.ShowMessage(tickerMessage, tickerType);
 
                 // Guardar no histórico
                 var entrada = new EnvioHistoricoEntry
@@ -484,6 +506,7 @@ namespace EnvioSafTApp
                 };
 
                 entrada.LogFilePath = HistoricoEnviosService.GuardarLog(entrada, resumoLegivel, output, error);
+                _ultimoLogPath = entrada.LogFilePath;
                 HistoricoEnviosService.RegistarEnvio(entrada);
 
                 if (_historicoInicializado)
@@ -499,10 +522,11 @@ namespace EnvioSafTApp
             finally
             {
                 LimparPastaTemporaria();
+                AtualizarEstadoBotoesResultado();
             }
         }
 
-        private string ConstruirArgumentosEnvio(
+        private ProcessStartInfo CriarProcessoEnvio(
             string jarPath,
             string nif,
             string password,
@@ -517,26 +541,63 @@ namespace EnvioSafTApp
             string nifEmitente,
             string outputPath)
         {
-            var args = new StringBuilder();
+            var psi = new ProcessStartInfo("java")
+            {
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
 
             if (!string.IsNullOrWhiteSpace(memoria))
-                args.Append($"{memoria} ");
+            {
+                foreach (var argumentoMemoria in memoria
+                             .Split(' ', StringSplitOptions.RemoveEmptyEntries))
+                {
+                    psi.ArgumentList.Add(argumentoMemoria);
+                }
+            }
 
-            args.Append($"-jar \"{jarPath}\" -n {nif} -p {password} -a {ano} -m {mes} -op {op} -i \"{ficheiro}\" -c \"{updatePath}\"");
+            psi.ArgumentList.Add("-jar");
+            psi.ArgumentList.Add(jarPath);
+            psi.ArgumentList.Add("-n");
+            psi.ArgumentList.Add(nif);
+            psi.ArgumentList.Add("-p");
+            psi.ArgumentList.Add(password);
+            psi.ArgumentList.Add("-a");
+            psi.ArgumentList.Add(ano);
+            psi.ArgumentList.Add("-m");
+            psi.ArgumentList.Add(mes);
+            psi.ArgumentList.Add("-op");
+            psi.ArgumentList.Add(op);
+            psi.ArgumentList.Add("-i");
+            psi.ArgumentList.Add(ficheiro);
+            psi.ArgumentList.Add("-c");
+            psi.ArgumentList.Add(updatePath);
 
             if (isTeste)
-                args.Append(" -t");
+            {
+                psi.ArgumentList.Add("-t");
+            }
 
             if (isAf)
-                args.Append(" -af");
+            {
+                psi.ArgumentList.Add("-af");
+            }
 
             if (!string.IsNullOrWhiteSpace(nifEmitente))
-                args.Append($" -ea {nifEmitente}");
+            {
+                psi.ArgumentList.Add("-ea");
+                psi.ArgumentList.Add(nifEmitente);
+            }
 
             if (!string.IsNullOrWhiteSpace(outputPath))
-                args.Append($" -o \"{outputPath}\"");
+            {
+                psi.ArgumentList.Add("-o");
+                psi.ArgumentList.Add(outputPath);
+            }
 
-            return args.ToString();
+            return psi;
         }
 
         private void PreencherCamposDoFicheiroSafT(string caminho)
@@ -700,9 +761,10 @@ namespace EnvioSafTApp
             int sucesso = lista.Count(e => string.Equals(e.Resultado, "sucesso", StringComparison.OrdinalIgnoreCase));
             int erro = lista.Count(e => string.Equals(e.Resultado, "erro", StringComparison.OrdinalIgnoreCase));
             int teste = lista.Count(e => string.Equals(e.Resultado, "teste", StringComparison.OrdinalIgnoreCase));
+            int atualizacao = lista.Count(e => string.Equals(e.Resultado, "atualizacao", StringComparison.OrdinalIgnoreCase));
 
             var sb = new StringBuilder();
-            sb.AppendLine($"Total: {total} | Sucesso: {sucesso} | Erros: {erro} | Testes: {teste}");
+            sb.AppendLine($"Total: {total} | Sucesso: {sucesso} | Erros: {erro} | Testes: {teste} | Atualizações: {atualizacao}");
             sb.AppendLine($"Taxa de sucesso global: {(total > 0 ? sucesso * 100.0 / total : 0):F1}%");
 
             var melhores = lista
@@ -822,6 +884,80 @@ namespace EnvioSafTApp
                 UseShellExecute = true
             });
             e.Handled = true;
+        }
+
+        private void CopiarResultado_Click(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(OutputTextBlock.Text))
+            {
+                _ticker.ShowMessage("Não existe output para copiar.", TickerMessageType.Warning);
+                return;
+            }
+
+            try
+            {
+                Clipboard.SetText(OutputTextBlock.Text);
+                _ticker.ShowMessage("Resultado copiado para a área de transferência.", TickerMessageType.Success);
+            }
+            catch (Exception ex)
+            {
+                _ticker.ShowMessage($"Não foi possível copiar: {ex.Message}", TickerMessageType.Error);
+            }
+        }
+
+        private void LimparResultado_Click(object sender, RoutedEventArgs e)
+        {
+            OutputTextBlock.Clear();
+            OutputSummaryTextBlock.Text = string.Empty;
+            _ultimoResumo = null;
+            _ultimoLogPath = null;
+            AtualizarEstadoBotoesResultado();
+            _ticker.ShowMessage("Painel de resultados limpo.", TickerMessageType.Info);
+        }
+
+        private void AbrirUltimoLog_Click(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(_ultimoLogPath) || !File.Exists(_ultimoLogPath))
+            {
+                _ticker.ShowMessage("Nenhum log recente disponível para abrir.", TickerMessageType.Warning);
+                AtualizarEstadoBotoesResultado();
+                return;
+            }
+
+            try
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = _ultimoLogPath,
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception ex)
+            {
+                _ticker.ShowMessage($"Não foi possível abrir o log: {ex.Message}", TickerMessageType.Error);
+            }
+        }
+
+        private void AtualizarEstadoBotoesResultado()
+        {
+            bool temOutput = !string.IsNullOrWhiteSpace(OutputTextBlock.Text);
+            bool temResumo = !string.IsNullOrWhiteSpace(OutputSummaryTextBlock.Text);
+            bool logDisponivel = !string.IsNullOrWhiteSpace(_ultimoLogPath) && File.Exists(_ultimoLogPath);
+
+            if (CopiarResultadoButton != null)
+            {
+                CopiarResultadoButton.IsEnabled = temOutput;
+            }
+
+            if (LimparResultadoButton != null)
+            {
+                LimparResultadoButton.IsEnabled = temOutput || temResumo;
+            }
+
+            if (AbrirLogButton != null)
+            {
+                AbrirLogButton.IsEnabled = logDisponivel;
+            }
         }
     }
 }
