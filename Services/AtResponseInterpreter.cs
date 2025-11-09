@@ -8,7 +8,7 @@ namespace EnvioSafTApp.Services
 {
     public static class AtResponseInterpreter
     {
-        private static readonly Regex CodigoRegex = new(@"AT[0-9]{4,6}|(?:\b[A-Z]{2}\d{3,}\b)", RegexOptions.IgnoreCase);
+        private static readonly Regex CodigoRegex = new Regex(@"AT[0-9]{4,6}|(?:\b[A-Z]{2}\d{3,}\b)", RegexOptions.IgnoreCase);
 
         public static AtResponseSummary Interpret(string stdout, string stderr)
         {

@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -377,12 +378,37 @@ namespace EnvioSafTApp
                 return;
             }
 
-            string jarPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "libs", "EnviaSaft.jar");
-            string updatePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "libs");
+            var jarUpdateResult = await JarUpdateService.EnsureLatestAsync(CancellationToken.None);
+
+            if (!jarUpdateResult.Success)
+            {
+                var message = jarUpdateResult.Message ?? "Não foi possível preparar o EnviaSaft.jar.";
+                _ticker.ShowMessage(message, jarUpdateResult.UsedFallback ? TickerMessageType.Warning : TickerMessageType.Error);
+
+                if (!jarUpdateResult.UsedFallback)
+                {
+                    return;
+                }
+            }
+            else
+            {
+                if (jarUpdateResult.Updated)
+                {
+                    _ticker.ShowMessage(jarUpdateResult.Message ?? "Foi descarregada a versão mais recente do EnviaSaft.jar.", TickerMessageType.Info);
+                }
+                else if (jarUpdateResult.UsedFallback)
+                {
+                    var message = jarUpdateResult.Message ?? "Não foi possível confirmar atualizações do EnviaSaft.jar; a versão local será utilizada.";
+                    _ticker.ShowMessage(message, TickerMessageType.Warning);
+                }
+            }
+
+            string jarPath = jarUpdateResult.JarPath;
+            string updatePath = Path.GetDirectoryName(jarPath) ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "libs");
 
             if (!File.Exists(jarPath))
             {
-                _ticker.ShowMessage("O ficheiro EnviaSaft.jar não foi encontrado na pasta 'libs'.", TickerMessageType.Error);
+                _ticker.ShowMessage("O ficheiro EnviaSaft.jar não está disponível após a tentativa de atualização.", TickerMessageType.Error);
                 return;
             }
 
