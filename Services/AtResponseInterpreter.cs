@@ -63,7 +63,7 @@ namespace EnvioSafTApp.Services
                 if (IsClientUpdateLine(linha))
                 {
                     requiresClientUpdate = true;
-                    var cleaned = CleanOutputLine(linha);
+                    var cleaned = CleanLine(linha);
                     if (!string.IsNullOrWhiteSpace(cleaned))
                     {
                         clientUpdateMessages.Add(cleaned);
@@ -73,11 +73,11 @@ namespace EnvioSafTApp.Services
 
                 if (IsErroLinha(linha))
                 {
-                    summary.Erros.Add(CleanOutputLine(linha));
+                    summary.Erros.Add(CleanLine(linha));
                 }
                 else if (linha.Contains("aviso", StringComparison.OrdinalIgnoreCase) || linha.Contains("warning", StringComparison.OrdinalIgnoreCase))
                 {
-                    summary.Avisos.Add(CleanOutputLine(linha));
+                    summary.Avisos.Add(CleanLine(linha));
                 }
             }
 
@@ -194,8 +194,6 @@ namespace EnvioSafTApp.Services
         }
 
         // Mantido por compatibilidade com builds que ainda referenciam o nome anterior.
-#pragma warning disable IDE0051 // Remover membros privados não utilizados
         private static string CleanLine(string? linha) => CleanOutputLine(linha);
-#pragma warning restore IDE0051
     }
 }
