@@ -1,11 +1,11 @@
 <Window x:Class="EnvioSafTApp.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Envio SAF-T AT" Height="760" Width="1250" WindowStartupLocation="CenterScreen"
+        Title="Envio SAF-T AT" Height="640" Width="1050" MaxWidth="1050" WindowStartupLocation="CenterScreen"
         Background="#F8F9FA"
-        MinWidth="1150"
-        MinHeight="720"
-        SizeToContent="Manual">
+        MinWidth="1050"
+        MinHeight="640"
+        SizeToContent="WidthAndHeight">
 
     <Grid>
         <Grid.RowDefinitions>
@@ -28,8 +28,8 @@
         <!-- Conteúdo principal -->
         <Grid Grid.Row="1" Margin="20,16,20,8">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="2*"/>
-                <ColumnDefinition Width="2.1*"/>
+                <ColumnDefinition Width="2.6*"/>
+                <ColumnDefinition Width="1.6*"/>
             </Grid.ColumnDefinitions>
 
             <!-- Coluna Esquerda (formulário) -->
@@ -196,11 +196,11 @@
             </StackPanel>
 
             <!-- Coluna Direita (Ajuda/Resultado) -->
-            <Border Grid.Column="1" Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="6" Padding="6" Margin="0">
+            <Border Grid.Column="1" Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="6">
                 <TabControl x:Name="RightTabControl"
-                            Margin="4"
-                            VerticalAlignment="Stretch"
-                            HorizontalAlignment="Stretch"
+                            Margin="10"
+                            Height="500"
+                            VerticalAlignment="Top"
                             TabStripPlacement="Top"
                             SelectionChanged="RightTabControl_SelectionChanged">
                     <TabControl.Resources>
