@@ -1,16 +1,15 @@
 using EnvioSafTApp.Models;
 using EnvioSafTApp.Services;
 using Microsoft.Win32;
-using SharpCompress.Archives;
-using SharpCompress.Readers;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -25,18 +24,31 @@ namespace EnvioSafTApp
 {
     public partial class MainWindow : Window
     {
-        private StatusTickerService _ticker;
+        private readonly StatusTickerService _ticker;
+        private readonly ObservableCollection<PreflightCheckResult> _preflightChecks = new();
+        private readonly List<EnvioHistoricoEntry> _historicoCompleto = new();
+        private List<EnvioHistoricoEntry> _historicoFiltrado = new();
         private string _nomeEmpresa = "Desconhecida";
-        private string _pastaTemporaria;
+        private string? _pastaTemporaria;
+        private AtResponseSummary? _ultimoResumo;
+        private bool _historicoInicializado;
+
         public MainWindow()
         {
             InitializeComponent();
             AppVersionTextBlock.Text = $"v{ObterVersao()} – loadinghappiness.pt";
             _ticker = new StatusTickerService(StatusTicker, StatusTickerIcon, StatusTickerBorder);
+            PreflightListView.ItemsSource = _preflightChecks;
             MostrarAjudaInicial();
             MostrarAnimacaoCabecalhoAjuda();
             MostrarLogoComAnimacao();
             this.PreviewMouseDown += Window_PreviewMouseDown;
+            this.Loaded += MainWindow_Loaded;
+        }
+
+        private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            await ExecutarPreValidacaoAsync(false);
         }
 
         private string ObterVersao()
@@ -67,6 +79,43 @@ namespace EnvioSafTApp
             }
         }
 
+        private async Task ExecutarPreValidacaoAsync(bool mostrarTicker = true)
+        {
+            try
+            {
+                PreflightProgressBar.Visibility = Visibility.Visible;
+                PreflightStatusTextBlock.Text = "A executar verificações...";
+                _preflightChecks.Clear();
+
+                var resultados = await PreflightCheckService.RunAsync();
+                foreach (var resultado in resultados)
+                {
+                    _preflightChecks.Add(resultado);
+                }
+
+                bool tudoOk = resultados.All(r => r.Sucesso);
+                PreflightStatusTextBlock.Text = tudoOk
+                    ? "Ambiente pronto para envio."
+                    : "Algumas verificações requerem atenção. Veja as instruções abaixo.";
+
+                if (mostrarTicker)
+                {
+                    _ticker.ShowMessage(
+                        tudoOk ? "Pré-validação concluída com sucesso." : "Pré-validação encontrou problemas.",
+                        tudoOk ? TickerMessageType.Success : TickerMessageType.Warning);
+                }
+            }
+            catch (Exception ex)
+            {
+                PreflightStatusTextBlock.Text = $"Falha ao executar pré-validação: {ex.Message}";
+                _ticker.ShowMessage($"Falha na pré-validação: {ex.Message}", TickerMessageType.Error);
+            }
+            finally
+            {
+                PreflightProgressBar.Visibility = Visibility.Collapsed;
+            }
+        }
+
         private string GetCampoAjuda(string nomeCampo)
         {
             return nomeCampo switch
@@ -75,9 +124,11 @@ namespace EnvioSafTApp
                 "NifTextBox" or "PasswordBox" => "NIF / Password",
                 "OperacaoComboBox" => "Operação",
                 "FicheiroTextBox" => "Ficheiro SAF-T",
+                "ArquivoPasswordBox" => "Password do Arquivo",
                 "NifEmitenteTextBox" => "NIF Emitente",
                 "OutputTextBox" => "Ficheiro de Retorno",
                 "MemoriaTextBox" => "Memória",
+                "EtiquetasTextBox" => "Etiquetas",
                 "AutoFaturacaoCheckBox" => "Autofaturação",
                 "TesteCheckBox" => "Envio de Teste",
                 _ => "Ajuda"
@@ -110,6 +161,11 @@ namespace EnvioSafTApp
                     MostrarAjudaInicial();
                 }
             }
+        }
+
+        private async void ReexecutarPreValidacao_Click(object sender, RoutedEventArgs e)
+        {
+            await ExecutarPreValidacaoAsync();
         }
 
         private bool ValidarCamposObrigatorios()
@@ -202,7 +258,7 @@ namespace EnvioSafTApp
             }
         }
 
-        private void BrowseFile_Click(object sender, RoutedEventArgs e)
+        private async void BrowseFile_Click(object sender, RoutedEventArgs e)
         {
             var dialog = new OpenFileDialog
             {
@@ -213,7 +269,20 @@ namespace EnvioSafTApp
             {
                 try
                 {
-                    var (caminhoXml, pastaTemp) = FileExtractionHelper.ObterXmlDoFicheiro(dialog.FileName);
+                    LimparPastaTemporaria();
+                    var password = ArquivoPasswordBox.Password;
+                    var progress = new Progress<FileExtractionProgress>(p =>
+                    {
+                        if (!string.IsNullOrWhiteSpace(p.Mensagem))
+                        {
+                            _ticker.ShowMessage(p.Mensagem, TickerMessageType.Info);
+                        }
+                    });
+
+                    var (caminhoXml, pastaTemp) = await Task.Run(() =>
+                        FileExtractionHelper.ObterXmlDoFicheiro(dialog.FileName,
+                            string.IsNullOrWhiteSpace(password) ? null : password,
+                            progress));
                     FicheiroTextBox.Text = caminhoXml;
                     _pastaTemporaria = pastaTemp;
                     PreencherCamposDoFicheiroSafT(caminhoXml);
@@ -226,47 +295,31 @@ namespace EnvioSafTApp
                 }
             }
 
-            RightTabControl.SelectedIndex = 0;
+            SelecionarTab("Ajuda");
         }
 
-        public static (string caminhoXml, string pastaTemp) ObterXmlDoFicheiro(string caminhoOriginal)
+        private void LimparPastaTemporaria()
         {
-            var extensao = Path.GetExtension(caminhoOriginal).ToLowerInvariant();
-
-            if (extensao == ".xml")
-                return (caminhoOriginal, null);
-
-            string pastaTemp = Path.Combine(Path.GetTempPath(), "EnviaSaft", Guid.NewGuid().ToString());
-            Directory.CreateDirectory(pastaTemp);
-
-            if (extensao == ".gz")
+            if (string.IsNullOrWhiteSpace(_pastaTemporaria))
             {
-                using var stream = File.OpenRead(caminhoOriginal);
-                using var reader = ReaderFactory.Open(stream);
-                while (reader.MoveToNextEntry())
-                {
-                    if (!reader.Entry.IsDirectory)
-                    {
-                        string destino = Path.Combine(pastaTemp, reader.Entry.Key);
-                        reader.WriteEntryToFile(destino);
-                    }
-                }
-            }
-            else if (extensao is ".zip" or ".rar" or ".tar" or ".tgz" or ".tar.gz")
-            {
-                using var archive = ArchiveFactory.Open(caminhoOriginal);
-                foreach (var entry in archive.Entries.Where(e => !e.IsDirectory))
-                {
-                    string destino = Path.Combine(pastaTemp, entry.Key);
-                    entry.WriteToFile(destino);
-                }
+                return;
             }
 
-            var ficheiroXml = Directory.GetFiles(pastaTemp, "*.xml", SearchOption.AllDirectories).FirstOrDefault();
-            if (ficheiroXml == null)
-                throw new Exception("Nenhum ficheiro .xml encontrado após extração.");
-
-            return (ficheiroXml, pastaTemp);
+            try
+            {
+                if (Directory.Exists(_pastaTemporaria))
+                {
+                    Directory.Delete(_pastaTemporaria, true);
+                }
+            }
+            catch
+            {
+                // Ignorar falhas de limpeza. A pasta será temporária e será substituída.
+            }
+            finally
+            {
+                _pastaTemporaria = null;
+            }
         }
 
         private void BrowseOutputFile_Click(object sender, RoutedEventArgs e)
@@ -281,6 +334,18 @@ namespace EnvioSafTApp
             {
                 OutputTextBox.Text = dialog.FileName;
                 _ticker.ShowMessage("Destino do ficheiro definido com sucesso.", TickerMessageType.Success);
+            }
+        }
+
+        private void SelecionarTab(string header)
+        {
+            foreach (var item in RightTabControl.Items.OfType<TabItem>())
+            {
+                if (string.Equals(item.Header?.ToString(), header, StringComparison.OrdinalIgnoreCase))
+                {
+                    item.IsSelected = true;
+                    break;
+                }
             }
         }
 
@@ -300,6 +365,12 @@ namespace EnvioSafTApp
             string nifEmitente = NifEmitenteTextBox.Text;
             bool isTeste = TesteCheckBox.IsChecked == true;
             bool isAf = AutoFaturacaoCheckBox.IsChecked == true;
+            var etiquetas = EtiquetasTextBox.Text?
+                .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(t => t.Trim())
+                .Where(t => !string.IsNullOrWhiteSpace(t))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList() ?? new List<string>();
 
             if (!File.Exists(ficheiro))
             {
@@ -307,22 +378,49 @@ namespace EnvioSafTApp
                 return;
             }
 
-            string jarPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "libs", "EnviaSaft.jar");
-            string updatePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "libs");
+            var jarUpdateResult = await JarUpdateService.EnsureLatestAsync(CancellationToken.None);
+
+            if (!jarUpdateResult.Success)
+            {
+                var message = jarUpdateResult.Message ?? "Não foi possível preparar o EnviaSaft.jar.";
+                _ticker.ShowMessage(message, jarUpdateResult.UsedFallback ? TickerMessageType.Warning : TickerMessageType.Error);
+
+                if (!jarUpdateResult.UsedFallback)
+                {
+                    return;
+                }
+            }
+            else
+            {
+                if (jarUpdateResult.Updated)
+                {
+                    _ticker.ShowMessage(jarUpdateResult.Message ?? "Foi descarregada a versão mais recente do EnviaSaft.jar.", TickerMessageType.Info);
+                }
+                else if (jarUpdateResult.UsedFallback)
+                {
+                    var message = jarUpdateResult.Message ?? "Não foi possível confirmar atualizações do EnviaSaft.jar; a versão local será utilizada.";
+                    _ticker.ShowMessage(message, TickerMessageType.Warning);
+                }
+            }
+
+            string jarPath = jarUpdateResult.JarPath;
+            string updatePath = Path.GetDirectoryName(jarPath) ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "libs");
 
             if (!File.Exists(jarPath))
             {
-                _ticker.ShowMessage("O ficheiro EnviaSaft.jar não foi encontrado na pasta 'libs'.", TickerMessageType.Error);
+                _ticker.ShowMessage("O ficheiro EnviaSaft.jar não está disponível após a tentativa de atualização.", TickerMessageType.Error);
                 return;
             }
 
             string args = ConstruirArgumentosEnvio(jarPath, nif, password, ano, mes, op, ficheiro, updatePath, memoria, isTeste, isAf, nifEmitente, outputPath);
 
             OutputTextBlock.Text = ""; // Limpa output anterior
-            RightTabControl.SelectedIndex = 1;
+            OutputSummaryTextBlock.Text = string.Empty;
+            SelecionarTab("Resultado");
 
             try
             {
+                var dataEnvio = DateTime.Now;
                 var resultado = await Task.Run(() =>
                 {
                     var psi = new ProcessStartInfo("java", args)
@@ -347,9 +445,19 @@ namespace EnvioSafTApp
                 string output = resultado.Item1;
                 string error = resultado.Item2;
 
-                OutputTextBlock.Text = output + Environment.NewLine + error;
+                var resumo = AtResponseInterpreter.Interpret(output, error);
+                _ultimoResumo = resumo;
+                string resumoLegivel = resumo.ConstruirResumoLegivel();
+                OutputSummaryTextBlock.Text = string.IsNullOrWhiteSpace(resumoLegivel)
+                    ? "Sem informação interpretável."
+                    : resumoLegivel;
 
-                bool sucesso = !string.IsNullOrWhiteSpace(output);
+                var blocos = new List<string>();
+                if (!string.IsNullOrWhiteSpace(output)) blocos.Add(output.Trim());
+                if (!string.IsNullOrWhiteSpace(error)) blocos.Add(error.Trim());
+                OutputTextBlock.Text = string.Join(Environment.NewLine + Environment.NewLine, blocos);
+
+                bool sucesso = resumo.Sucesso;
                 string resultadoFinal = isTeste ? "teste" : sucesso ? "sucesso" : "erro";
 
                 _ticker.ShowMessage(
@@ -358,18 +466,29 @@ namespace EnvioSafTApp
                 );
 
                 // Guardar no histórico
-                HistoricoEnviosService.RegistarEnvio(new EnvioHistoricoEntry
+                var entrada = new EnvioHistoricoEntry
                 {
                     EmpresaNome = _nomeEmpresa,
                     NIF = nif,
-                    DataHora = DateTime.Now,
+                    DataHora = dataEnvio,
                     Ano = int.TryParse(ano, out var anoInt) ? anoInt : DateTime.Now.Year,
                     Mes = mes,
                     FicheiroSaft = ficheiro,
                     FicheiroOutput = outputPath,
                     Operacao = op,
-                    Resultado = resultadoFinal
-                });
+                    Resultado = resultadoFinal,
+                    Resumo = resumoLegivel,
+                    Tags = etiquetas
+                };
+
+                entrada.LogFilePath = HistoricoEnviosService.GuardarLog(entrada, resumoLegivel, output, error);
+                HistoricoEnviosService.RegistarEnvio(entrada);
+
+                if (_historicoInicializado)
+                {
+                    _historicoCompleto.Add(entrada);
+                    AplicarFiltrosHistorico();
+                }
             }
             catch (Exception ex)
             {
@@ -377,17 +496,7 @@ namespace EnvioSafTApp
             }
             finally
             {
-                if (!string.IsNullOrWhiteSpace(_pastaTemporaria) && Directory.Exists(_pastaTemporaria))
-                {
-                    try
-                    {
-                        Directory.Delete(_pastaTemporaria, recursive: true);
-                    }
-                    catch
-                    {
-                        // Ignorar erros de limpeza
-                    }
-                }
+                LimparPastaTemporaria();
             }
         }
 
@@ -480,73 +589,185 @@ namespace EnvioSafTApp
 
         private void CarregarHistoricoEnvios()
         {
-            var lista = new List<EnvioHistoricoEntry>();
-            string baseFolder = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "EnviaSaft",
-                "HistoricoEnvios"
-            );
-
-            if (Directory.Exists(baseFolder))
+            if (!_historicoInicializado)
             {
-                foreach (var empresaDir in Directory.GetDirectories(baseFolder))
-                {
-                    string empresa = Path.GetFileName(empresaDir);
-
-                    foreach (var anoDir in Directory.GetDirectories(empresaDir))
-                    {
-                        foreach (var ficheiro in Directory.GetFiles(anoDir, "*.json"))
-                        {
-                            try
-                            {
-                                string json = File.ReadAllText(ficheiro);
-                                var entradas = JsonSerializer.Deserialize<List<EnvioHistoricoEntry>>(json);
-
-                                if (entradas != null)
-                                {
-                                    foreach (var entry in entradas)
-                                    {
-                                        entry.EmpresaNome = empresa; // opcional se já estiver no ficheiro
-                                        lista.Add(entry);
-                                    }
-                                }
-                            }
-                            catch
-                            {
-                                // ignorar ficheiros corrompidos
-                            }
-                        }
-                    }
-                }
+                _historicoCompleto.Clear();
+                var lista = HistoricoEnviosService.ObterHistorico();
+                _historicoCompleto.AddRange(lista);
+                AtualizarOpcoesFiltrosHistorico();
+                _historicoInicializado = true;
             }
 
-            var empresasUnicas = lista
-                .Select(e => e.EmpresaNome)
-                .Distinct()
-                .OrderBy(n => n)
-                .ToList();
-
-            EmpresaComboBox.ItemsSource = empresasUnicas;
-            HistoricoDataGrid.ItemsSource = lista.OrderByDescending(e => e.DataHora).ToList();
+            AplicarFiltrosHistorico();
         }
 
-        private void FiltrarHistorico_Click(object sender, RoutedEventArgs e)
+        private void AtualizarOpcoesFiltrosHistorico()
         {
-            string empresaSelecionada = EmpresaComboBox.SelectedValue as string;
+            var empresas = _historicoCompleto
+                .Select(e => e.EmpresaNome)
+                .Where(e => !string.IsNullOrWhiteSpace(e))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(e => e)
+                .ToList();
 
-            if (!string.IsNullOrWhiteSpace(empresaSelecionada))
+            var operacoes = _historicoCompleto
+                .Select(e => e.Operacao)
+                .Where(e => !string.IsNullOrWhiteSpace(e))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(e => e)
+                .ToList();
+
+            var resultados = _historicoCompleto
+                .Select(e => e.Resultado)
+                .Where(e => !string.IsNullOrWhiteSpace(e))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(e => e)
+                .ToList();
+
+            EmpresaComboBox.ItemsSource = empresas;
+            OperacaoHistoricoComboBox.ItemsSource = operacoes;
+            ResultadoHistoricoComboBox.ItemsSource = resultados;
+
+            EmpresaComboBox.SelectedIndex = -1;
+            OperacaoHistoricoComboBox.SelectedIndex = -1;
+            ResultadoHistoricoComboBox.SelectedIndex = -1;
+        }
+
+        private void AplicarFiltrosHistorico()
+        {
+            IEnumerable<EnvioHistoricoEntry> query = _historicoCompleto;
+
+            string empresaFiltro = EmpresaComboBox.Text?.Trim() ?? string.Empty;
+            if (!string.IsNullOrWhiteSpace(empresaFiltro))
             {
-                var listaFiltrada = HistoricoDataGrid.ItemsSource as List<EnvioHistoricoEntry>;
+                query = query.Where(e => string.Equals(e.EmpresaNome, empresaFiltro, StringComparison.OrdinalIgnoreCase));
+            }
 
-                if (listaFiltrada != null)
-                {
-                    var filtrados = listaFiltrada
-                        .Where(e => e.EmpresaNome.Equals(empresaSelecionada, StringComparison.OrdinalIgnoreCase))
-                        .OrderByDescending(e => e.DataHora)
-                        .ToList();
+            string operacaoFiltro = OperacaoHistoricoComboBox.Text?.Trim() ?? string.Empty;
+            if (!string.IsNullOrWhiteSpace(operacaoFiltro))
+            {
+                query = query.Where(e => string.Equals(e.Operacao, operacaoFiltro, StringComparison.OrdinalIgnoreCase));
+            }
 
-                    HistoricoDataGrid.ItemsSource = filtrados;
-                }
+            string resultadoFiltro = ResultadoHistoricoComboBox.Text?.Trim() ?? string.Empty;
+            if (!string.IsNullOrWhiteSpace(resultadoFiltro))
+            {
+                query = query.Where(e => string.Equals(e.Resultado, resultadoFiltro, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (HistoricoInicioDatePicker.SelectedDate is DateTime inicio)
+            {
+                query = query.Where(e => e.DataHora >= inicio.Date);
+            }
+
+            if (HistoricoFimDatePicker.SelectedDate is DateTime fim)
+            {
+                var fimInclusivo = fim.Date.AddDays(1).AddTicks(-1);
+                query = query.Where(e => e.DataHora <= fimInclusivo);
+            }
+
+            var etiquetasFiltro = EtiquetaFiltroTextBox.Text?
+                .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(t => t.Trim())
+                .Where(t => !string.IsNullOrWhiteSpace(t))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList() ?? new List<string>();
+
+            if (etiquetasFiltro.Any())
+            {
+                query = query.Where(e => e.Tags != null && etiquetasFiltro.All(tag => e.Tags.Any(t => t.Equals(tag, StringComparison.OrdinalIgnoreCase))));
+            }
+
+            _historicoFiltrado = query
+                .OrderByDescending(e => e.DataHora)
+                .ToList();
+
+            HistoricoDataGrid.ItemsSource = _historicoFiltrado;
+            HistoricoEstatisticasTextBlock.Text = GerarEstatisticasHistorico(_historicoFiltrado);
+        }
+
+        private string GerarEstatisticasHistorico(IEnumerable<EnvioHistoricoEntry> entradas)
+        {
+            var lista = entradas.ToList();
+            if (!lista.Any())
+            {
+                return "Sem registos para apresentar.";
+            }
+
+            int total = lista.Count;
+            int sucesso = lista.Count(e => string.Equals(e.Resultado, "sucesso", StringComparison.OrdinalIgnoreCase));
+            int erro = lista.Count(e => string.Equals(e.Resultado, "erro", StringComparison.OrdinalIgnoreCase));
+            int teste = lista.Count(e => string.Equals(e.Resultado, "teste", StringComparison.OrdinalIgnoreCase));
+
+            var sb = new StringBuilder();
+            sb.AppendLine($"Total: {total} | Sucesso: {sucesso} | Erros: {erro} | Testes: {teste}");
+            sb.AppendLine($"Taxa de sucesso global: {(total > 0 ? sucesso * 100.0 / total : 0):F1}%");
+
+            var melhores = lista
+                .GroupBy(e => e.EmpresaNome)
+                .OrderByDescending(g => g.Count())
+                .Take(5);
+
+            sb.AppendLine("Taxa de sucesso por empresa:");
+            foreach (var grupo in melhores)
+            {
+                int totalEmpresa = grupo.Count();
+                int sucessoEmpresa = grupo.Count(e => string.Equals(e.Resultado, "sucesso", StringComparison.OrdinalIgnoreCase));
+                double taxa = totalEmpresa > 0 ? sucessoEmpresa * 100.0 / totalEmpresa : 0;
+                sb.AppendLine($" • {grupo.Key}: {taxa:F1}% ({sucessoEmpresa}/{totalEmpresa})");
+            }
+
+            return sb.ToString().Trim();
+        }
+
+        private void FiltroHistorico_Alterado(object sender, SelectionChangedEventArgs e)
+        {
+            if (!_historicoInicializado)
+                return;
+
+            AplicarFiltrosHistorico();
+        }
+
+        private void FiltroHistorico_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (!_historicoInicializado)
+                return;
+
+            AplicarFiltrosHistorico();
+        }
+
+        private void LimparFiltrosHistorico_Click(object sender, RoutedEventArgs e)
+        {
+            EmpresaComboBox.Text = string.Empty;
+            OperacaoHistoricoComboBox.SelectedIndex = -1;
+            OperacaoHistoricoComboBox.Text = string.Empty;
+            ResultadoHistoricoComboBox.SelectedIndex = -1;
+            ResultadoHistoricoComboBox.Text = string.Empty;
+            HistoricoInicioDatePicker.SelectedDate = null;
+            HistoricoFimDatePicker.SelectedDate = null;
+            EtiquetaFiltroTextBox.Text = string.Empty;
+
+            AplicarFiltrosHistorico();
+        }
+
+        private void ExportarHistorico_Click(object sender, RoutedEventArgs e)
+        {
+            if (_historicoFiltrado == null || !_historicoFiltrado.Any())
+            {
+                _ticker.ShowMessage("Não existem registos para exportar.", TickerMessageType.Warning);
+                return;
+            }
+
+            var dialog = new SaveFileDialog
+            {
+                Filter = "Ficheiro CSV (*.csv)|*.csv",
+                FileName = $"historico_envios_{DateTime.Now:yyyyMMddHHmm}.csv"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                HistoricoEnviosService.ExportarCsv(_historicoFiltrado, dialog.FileName);
+                _ticker.ShowMessage("Histórico exportado com sucesso.", TickerMessageType.Success);
             }
         }
 

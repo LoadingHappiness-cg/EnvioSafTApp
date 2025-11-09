@@ -9,7 +9,8 @@ namespace EnvioSafTApp.Services
     {
         Success,
         Error,
-        Warning
+        Warning,
+        Info
     }
 
     public class StatusTickerService
@@ -45,6 +46,11 @@ namespace EnvioSafTApp.Services
                     background = new SolidColorBrush(Color.FromRgb(255, 249, 196)); // Amarelo claro
                     foreground = Brushes.DarkOrange;
                     icon = "⚠️";
+                    break;
+                case TickerMessageType.Info:
+                    background = new SolidColorBrush(Color.FromRgb(227, 242, 253));
+                    foreground = new SolidColorBrush(Color.FromRgb(25, 118, 210));
+                    icon = "ℹ️";
                     break;
                 default:
                     background = new SolidColorBrush(Color.FromRgb(223, 246, 221)); // Verde claro
