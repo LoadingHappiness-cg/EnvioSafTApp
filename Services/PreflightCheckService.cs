@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace EnvioSafTApp.Services
@@ -19,7 +18,7 @@ namespace EnvioSafTApp.Services
             var checks = new List<PreflightCheckResult>
             {
                 await VerificarJavaAsync(),
-                await GarantirJarAtualizadoAsync(),
+                await Task.Run(VerificarJar),
                 await Task.Run(VerificarPermissoesEscrita)
             };
 
@@ -77,28 +76,18 @@ namespace EnvioSafTApp.Services
             return resultado;
         }
 
-        private static async Task<PreflightCheckResult> GarantirJarAtualizadoAsync()
+        private static PreflightCheckResult VerificarJar()
         {
-            var resultado = new PreflightCheckResult
+            string jarPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "libs", "EnviaSaft.jar");
+            bool existe = File.Exists(jarPath);
+
+            return new PreflightCheckResult
             {
-                Nome = "EnviaSaft.jar"
+                Nome = "EnviaSaft.jar",
+                Sucesso = existe,
+                Detalhes = existe ? $"Encontrado em {jarPath}" : "O ficheiro EnviaSaft.jar não foi encontrado na pasta 'libs'.",
+                ResolucaoSugerida = existe ? string.Empty : "Copie o ficheiro EnviaSaft.jar fornecido pela AT para a pasta 'libs' da aplicação."
             };
-
-            var updateResult = await JarUpdateService.EnsureLatestAsync(CancellationToken.None);
-
-            resultado.Sucesso = updateResult.Success;
-            resultado.Detalhes = updateResult.Message;
-
-            if (!updateResult.Success)
-            {
-                resultado.ResolucaoSugerida = "Verifique a ligação à internet ou coloque manualmente o EnviaSaft.jar na pasta 'libs'.";
-            }
-            else if (updateResult.UsedFallback)
-            {
-                resultado.ResolucaoSugerida = "Foi usada a versão local existente. Se o envio falhar, descarregue manualmente o EnviaSaft.jar do Portal das Finanças.";
-            }
-
-            return resultado;
         }
 
         private static PreflightCheckResult VerificarPermissoesEscrita()
