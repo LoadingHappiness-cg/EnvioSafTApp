@@ -28,12 +28,12 @@ namespace EnvioSafTApp.Services
             var checks = new List<PreflightCheckResult>
             {
                 await VerificarJavaAsync(),
-                await Task.Run(VerificarJar),
                 await Task.Run(VerificarPermissoesEscrita)
             };
 
             return checks;
         }
+
 
         private async Task<PreflightCheckResult> VerificarJavaAsync()
         {

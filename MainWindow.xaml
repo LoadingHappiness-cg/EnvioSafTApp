@@ -1,11 +1,13 @@
 <Window x:Class="EnvioSafTApp.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:converters="clr-namespace:EnvioSafTApp.Converters"
         Title="Envio SAF-T AT" Height="800" Width="1300" WindowStartupLocation="CenterScreen"
         MinWidth="1200"
         MinHeight="750">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <converters:TickerTypeToColorConverter x:Key="TickerTypeToColorConverter"/>
     </Window.Resources>
 
     <Grid Background="#F5F7FA">
@@ -474,7 +476,10 @@
         </Grid>
 
         <!-- Rodapé com Ticker -->
-        <Border Grid.Row="2" x:Name="StatusTickerBorder" Background="#1976D2" Padding="15,0">
+        <Border Grid.Row="2" 
+                x:Name="StatusTickerBorder" 
+                Background="{Binding TickerType, Converter={StaticResource TickerTypeToColorConverter}}" 
+                Padding="15,0">
             <Grid>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock x:Name="StatusTickerIcon" 

@@ -81,7 +81,20 @@ namespace EnvioSafTApp.Services
                 }
             }
 
-            summary.Sucesso = !summary.Erros.Any() && linhas.Any(l => l.Contains("sucesso", StringComparison.OrdinalIgnoreCase) || l.Contains("enviado", StringComparison.OrdinalIgnoreCase));
+            // Check for test success indicators (totalFaturas, totalCreditos, etc.)
+            bool hasTestSuccessIndicators = linhas.Any(l => 
+                l.Contains("totalFaturas", StringComparison.OrdinalIgnoreCase) ||
+                l.Contains("totalCreditos", StringComparison.OrdinalIgnoreCase) ||
+                l.Contains("totalDocumentos", StringComparison.OrdinalIgnoreCase) ||
+                l.Contains("processamento", StringComparison.OrdinalIgnoreCase));
+
+            bool hasExplicitSuccess = linhas.Any(l => 
+                l.Contains("sucesso", StringComparison.OrdinalIgnoreCase) || 
+                l.Contains("enviado", StringComparison.OrdinalIgnoreCase) ||
+                l.Contains("finished", StringComparison.OrdinalIgnoreCase));
+
+            // If we have test indicators or explicit success, and no errors, it's a success
+            summary.Sucesso = !summary.Erros.Any() && (hasTestSuccessIndicators || hasExplicitSuccess);
 
             if (requiresClientUpdate && !summary.Sucesso)
             {
@@ -102,7 +115,15 @@ namespace EnvioSafTApp.Services
             else if (summary.Sucesso)
             {
                 summary.Estado = "Sucesso";
-                summary.MensagemPrincipal = linhas.FirstOrDefault(l => l.Contains("sucesso", StringComparison.OrdinalIgnoreCase)) ?? "Envio concluído.";
+                // If it's a test response with statistics, use that as the message
+                if (hasTestSuccessIndicators && !hasExplicitSuccess)
+                {
+                    summary.MensagemPrincipal = "Teste executado com sucesso. Ficheiro validado.";
+                }
+                else
+                {
+                    summary.MensagemPrincipal = linhas.FirstOrDefault(l => l.Contains("sucesso", StringComparison.OrdinalIgnoreCase)) ?? "Envio concluído.";
+                }
             }
             else if (summary.Erros.Any() || linhasErro.Any())
             {
@@ -121,6 +142,7 @@ namespace EnvioSafTApp.Services
             }
 
             return summary;
+
         }
 
         private static bool IsErroLinha(string linha)
