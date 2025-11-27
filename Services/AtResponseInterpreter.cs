@@ -31,7 +31,7 @@ namespace EnvioSafTApp.Services
             "obter o jar"
         };
 
-        public static AtResponseSummary Interpret(string stdout, string stderr)
+        public static AtResponseSummary Interpret(string stdout, string stderr, int? exitCode = null, bool isTeste = false)
         {
             var summary = new AtResponseSummary
             {
@@ -93,8 +93,17 @@ namespace EnvioSafTApp.Services
                 l.Contains("enviado", StringComparison.OrdinalIgnoreCase) ||
                 l.Contains("finished", StringComparison.OrdinalIgnoreCase));
 
+            bool exitSuccess = exitCode.HasValue && exitCode.Value == 0;
+            bool hasErrorOutput = summary.Erros.Any() || linhasErro.Any();
+
             // If we have test indicators or explicit success, and no errors, it's a success
             summary.Sucesso = !summary.Erros.Any() && (hasTestSuccessIndicators || hasExplicitSuccess);
+
+            // Treat a clean exit code with no errors as success, even if the output is sparse
+            if (!summary.Sucesso && exitSuccess && !hasErrorOutput)
+            {
+                summary.Sucesso = true;
+            }
 
             if (requiresClientUpdate && !summary.Sucesso)
             {
@@ -114,21 +123,38 @@ namespace EnvioSafTApp.Services
             }
             else if (summary.Sucesso)
             {
-                summary.Estado = "Sucesso";
+                summary.Estado = isTeste ? "Teste concluído" : "Sucesso";
                 // If it's a test response with statistics, use that as the message
                 if (hasTestSuccessIndicators && !hasExplicitSuccess)
                 {
                     summary.MensagemPrincipal = "Teste executado com sucesso. Ficheiro validado.";
                 }
-                else
+                else if (hasExplicitSuccess)
                 {
                     summary.MensagemPrincipal = linhas.FirstOrDefault(l => l.Contains("sucesso", StringComparison.OrdinalIgnoreCase)) ?? "Envio concluído.";
                 }
+                else if (exitSuccess)
+                {
+                    summary.MensagemPrincipal = isTeste
+                        ? "Teste concluído com sucesso. Ficheiro validado."
+                        : "Envio concluído sem erros reportados.";
+                }
+                else
+                {
+                    summary.MensagemPrincipal = "Envio concluído.";
+                }
             }
-            else if (summary.Erros.Any() || linhasErro.Any())
+            else if (hasErrorOutput)
             {
                 summary.Estado = "Erro";
-                summary.MensagemPrincipal = summary.Erros.FirstOrDefault() ?? linhasErro.FirstOrDefault() ?? "Ocorreu um erro durante o envio.";
+                var mensagemErro = summary.Erros.FirstOrDefault() ?? linhasErro.FirstOrDefault();
+
+                if (string.IsNullOrWhiteSpace(mensagemErro) && exitCode.HasValue)
+                {
+                    mensagemErro = $"O cliente de comando terminou com código {exitCode.Value}.";
+                }
+
+                summary.MensagemPrincipal = mensagemErro ?? "Ocorreu um erro durante o envio.";
             }
             else if (summary.Avisos.Any())
             {
@@ -137,8 +163,22 @@ namespace EnvioSafTApp.Services
             }
             else
             {
-                summary.Estado = string.IsNullOrWhiteSpace(stdout) && string.IsNullOrWhiteSpace(stderr) ? "Sem resposta" : "Resultado indeterminado";
-                summary.MensagemPrincipal = linhas.FirstOrDefault() ?? linhasErro.FirstOrDefault() ?? string.Empty;
+                if (exitCode.HasValue && exitCode.Value != 0)
+                {
+                    summary.Estado = "Erro";
+                    summary.MensagemPrincipal = $"O cliente de comando terminou com código {exitCode.Value}.";
+                }
+                else
+                {
+                    summary.Estado = isTeste ? "Teste concluído" : "Resultado indeterminado";
+                    summary.MensagemPrincipal = linhas.FirstOrDefault() ?? linhasErro.FirstOrDefault() ??
+                        (exitSuccess ? "Execução terminada sem mensagens adicionais." : "Sem saída para interpretar.");
+
+                    if (exitSuccess)
+                    {
+                        summary.Sucesso = true;
+                    }
+                }
             }
 
             return summary;

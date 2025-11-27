@@ -44,7 +44,7 @@ namespace EnvioSafTApp
 
         private void RightTabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (e.Source is TabControl && RightTabControl.SelectedItem is TabItem selectedTab && selectedTab.Header.ToString() == "Histórico")
+            if (e.Source is TabControl && RightTabControl.SelectedItem is TabItem selectedTab && selectedTab == HistoricoTab)
             {
                 if (DataContext is MainViewModel vm)
                 {

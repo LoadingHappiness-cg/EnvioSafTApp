@@ -347,19 +347,20 @@ namespace EnvioSafTApp.ViewModels
 
                     using var proc = Process.Start(psi);
                     if (proc == null)
-                        return ("", "Falha ao iniciar o processo Java.");
+                        return ("", "Falha ao iniciar o processo Java.", -1);
 
                     string stdout = proc.StandardOutput.ReadToEnd();
                     string stderr = proc.StandardError.ReadToEnd();
                     proc.WaitForExit();
 
-                    return (stdout, stderr);
+                    return (stdout, stderr, proc.ExitCode);
                 });
 
                 string output = resultado.Item1;
                 string error = resultado.Item2;
+                int exitCode = resultado.Item3;
 
-                var resumo = AtResponseInterpreter.Interpret(output, error);
+                var resumo = AtResponseInterpreter.Interpret(output, error, exitCode, IsTeste);
                 // _ultimoResumo = resumo; // Need property?
                 string resumoLegivel = resumo.ConstruirResumoLegivel();
                 OutputSummary = string.IsNullOrWhiteSpace(resumoLegivel)
@@ -398,7 +399,19 @@ namespace EnvioSafTApp.ViewModels
                 }
 
                 bool sucesso = resumo.Sucesso;
-                string resultadoFinal = IsTeste ? "teste" : resumo.RequerAtualizacaoCliente ? "atualizacao" : sucesso ? "sucesso" : "erro";
+                string resultadoFinal;
+                if (resumo.RequerAtualizacaoCliente)
+                {
+                    resultadoFinal = "atualizacao";
+                }
+                else if (sucesso)
+                {
+                    resultadoFinal = IsTeste ? "teste" : "sucesso";
+                }
+                else
+                {
+                    resultadoFinal = "erro";
+                }
 
                 var tickerType = resumo.RequerAtualizacaoCliente
                     ? TickerMessageType.Warning
@@ -420,7 +433,11 @@ namespace EnvioSafTApp.ViewModels
                 }
                 else if (sucesso)
                 {
-                    tickerMessage = "Envio realizado com sucesso.";
+                    tickerMessage = !string.IsNullOrWhiteSpace(resumo.MensagemPrincipal)
+                        ? resumo.MensagemPrincipal
+                        : IsTeste
+                            ? "Teste executado com sucesso."
+                            : "Envio realizado com sucesso.";
                 }
                 else
                 {
