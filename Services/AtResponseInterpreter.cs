@@ -192,6 +192,13 @@ namespace EnvioSafTApp.Services
                 return false;
             }
 
+            // Ignore empty error tags or lines that become blank after stripping XML
+            var cleaned = CleanOutputLine(linha);
+            if (string.IsNullOrWhiteSpace(cleaned))
+            {
+                return false;
+            }
+
             var texto = linha.Trim();
             if (!texto.Contains("erro", StringComparison.OrdinalIgnoreCase))
             {

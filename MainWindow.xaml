@@ -232,7 +232,9 @@
 
             <!-- Coluna Direita (Tabs) -->
             <Border Grid.Column="2" Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="8" Padding="10">
-                <TabControl x:Name="RightTabControl" SelectionChanged="RightTabControl_SelectionChanged">
+                <TabControl x:Name="RightTabControl"
+                            SelectionChanged="RightTabControl_SelectionChanged"
+                            SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}">
                     <!-- Pré-validação Tab -->
                     <TabItem x:Name="PreValidacaoTab">
                         <TabItem.Header>
@@ -265,7 +267,7 @@
                                             <Border Padding="10" Margin="0,0,0,8" Background="#F8F9FA" CornerRadius="4">
                                                 <StackPanel>
                                                     <TextBlock Text="{Binding Nome}" FontWeight="SemiBold" FontSize="13"/>
-                                                    <TextBlock Text="{Binding Mensagem}" TextWrapping="Wrap" Margin="0,4,0,0" FontSize="12"/>
+                                                    <TextBlock Text="{Binding Detalhes}" TextWrapping="Wrap" Margin="0,4,0,0" FontSize="12"/>
                                                 </StackPanel>
                                             </Border>
                                         </DataTemplate>

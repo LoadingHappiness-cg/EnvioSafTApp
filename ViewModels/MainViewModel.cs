@@ -47,6 +47,9 @@ namespace EnvioSafTApp.ViewModels
 
         // Output Properties
         [ObservableProperty]
+        private int _selectedTabIndex;
+
+        [ObservableProperty]
         private string _outputText = "";
 
         [ObservableProperty]
@@ -335,8 +338,7 @@ namespace EnvioSafTApp.ViewModels
             OutputText = "";
             OutputSummary = string.Empty;
             // _ultimoLogPath = null; // Need property?
-            
-            // TODO: Switch tab to Result (Need a way to control tabs from VM or use a service/message)
+            SelectedTabIndex = 2; // Resultado tab
             
             try
             {

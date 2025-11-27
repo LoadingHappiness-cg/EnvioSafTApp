@@ -28,6 +28,7 @@ namespace EnvioSafTApp.Services
             var checks = new List<PreflightCheckResult>
             {
                 await VerificarJavaAsync(),
+                await Task.Run(VerificarJar),
                 await Task.Run(VerificarPermissoesEscrita)
             };
 
@@ -88,21 +89,34 @@ namespace EnvioSafTApp.Services
 
         private PreflightCheckResult VerificarJar()
         {
-            string jarPath = _jarUpdateService.GetLocalJarPath();
-            bool existe = File.Exists(jarPath);
-            string fileName = Path.GetFileName(jarPath);
-
-            return new PreflightCheckResult
+            try
             {
-                Nome = string.IsNullOrWhiteSpace(fileName) ? "Aplicação de envio da AT" : fileName,
-                Sucesso = existe,
-                Detalhes = existe
-                    ? $"Encontrado em {jarPath}"
-                    : "O ficheiro da aplicação oficial da AT não foi encontrado na pasta 'libs'.",
-                ResolucaoSugerida = existe
-                    ? string.Empty
-                    : "Copie o ficheiro .jar fornecido pela AT para a pasta 'libs' da aplicação (sem necessidade de renomear)."
-            };
+                string jarPath = _jarUpdateService.GetLocalJarPath();
+                bool existe = File.Exists(jarPath);
+                string fileName = Path.GetFileName(jarPath);
+
+                return new PreflightCheckResult
+                {
+                    Nome = string.IsNullOrWhiteSpace(fileName) ? "Aplicação de envio da AT" : fileName,
+                    Sucesso = existe,
+                    Detalhes = existe
+                        ? $"Encontrado em {jarPath}"
+                        : "O ficheiro da aplicação oficial da AT não foi encontrado na pasta 'libs'.",
+                    ResolucaoSugerida = existe
+                        ? string.Empty
+                        : "Copie o ficheiro .jar fornecido pela AT para a pasta 'libs' da aplicação (sem necessidade de renomear)."
+                };
+            }
+            catch (Exception ex)
+            {
+                return new PreflightCheckResult
+                {
+                    Nome = "Aplicação de envio da AT",
+                    Sucesso = false,
+                    Detalhes = $"Não foi possível validar a presença do .jar: {ex.Message}",
+                    ResolucaoSugerida = "Verifique se a pasta 'libs' existe e contém o ficheiro .jar oficial."
+                };
+            }
         }
 
         private PreflightCheckResult VerificarPermissoesEscrita()
