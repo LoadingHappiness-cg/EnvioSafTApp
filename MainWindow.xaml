@@ -30,6 +30,7 @@
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <Border Background="#1AFFFFFF" Padding="10" CornerRadius="12" Margin="0,0,10,0">
@@ -41,7 +42,16 @@
                     </StackPanel>
                 </StackPanel>
 
-                <Border Grid.Column="2" Background="#26FFFFFF" Padding="12,8" CornerRadius="12" VerticalAlignment="Center">
+                <Button Grid.Column="2"
+                        Content="✉️ ENVIAR"
+                        Style="{StaticResource PrimaryButtonStyle}"
+                        Command="{Binding EnviarCommand}"
+                        Margin="0,0,12,0"
+                        Padding="18,10"
+                        FontWeight="SemiBold"
+                        VerticalAlignment="Center"/>
+
+                <Border Grid.Column="3" Background="#26FFFFFF" Padding="12,8" CornerRadius="12" VerticalAlignment="Center">
                     <TextBlock Text="{Binding AppVersion}"
                                Foreground="White"
                                FontSize="12"
@@ -226,15 +236,6 @@
                         </StackPanel>
                     </GroupBox>
 
-                    <!-- Botão Enviar -->
-                    <Button x:Name="EnviarButton" 
-                           Content="✉️ ENVIAR"
-                           Style="{StaticResource PrimaryButtonStyle}"
-                           Height="50"
-                           FontSize="16"
-                           FontWeight="Bold"
-                           Margin="0,20,0,0"
-                           Command="{Binding EnviarCommand}"/>
                 </StackPanel>
             </ScrollViewer>
 
@@ -273,23 +274,24 @@
                                       Foreground="#1976D2"
                                       Margin="0,0,0,15"/>
 
-                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                                <ListView x:Name="PreflightListView"
-                                         ItemsSource="{Binding PreflightChecks}"
-                                         BorderThickness="0"
-                                         Background="Transparent">
-                                    <ListView.ItemTemplate>
-                                        <DataTemplate>
-                                            <Border Padding="10" Margin="0,0,0,8" Background="#F8F9FA" CornerRadius="4">
-                                                <StackPanel>
-                                                    <TextBlock Text="{Binding Nome}" FontWeight="SemiBold" FontSize="13"/>
-                                                    <TextBlock Text="{Binding Detalhes}" TextWrapping="Wrap" Margin="0,4,0,0" FontSize="12"/>
-                                                </StackPanel>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ListView.ItemTemplate>
-                                </ListView>
-                            </ScrollViewer>
+                            <ListView x:Name="PreflightListView"
+                                     Grid.Row="1"
+                                     ItemsSource="{Binding PreflightChecks}"
+                                     BorderThickness="0"
+                                     Background="Transparent"
+                                     ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                <ListView.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Padding="10" Margin="0,0,0,8" Background="#F8F9FA" CornerRadius="4">
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding Nome}" FontWeight="SemiBold" FontSize="13"/>
+                                                <TextBlock Text="{Binding Detalhes}" TextWrapping="Wrap" Margin="0,4,0,0" FontSize="12"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
 
                             <Button Grid.Row="2" 
                                    Content="🔄 Reexecutar"

@@ -432,7 +432,7 @@ namespace EnvioSafTApp.ViewModels
                     tickerMessage = !string.IsNullOrWhiteSpace(resumo.MensagemPrincipal)
                         ? resumo.MensagemPrincipal
                         : IsTeste
-                            ? "Teste executado com sucesso."
+                            ? "Sucesso | teste"
                             : "Envio realizado com sucesso.";
                 }
                 else
