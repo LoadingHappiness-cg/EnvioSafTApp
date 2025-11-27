@@ -1,6 +1,7 @@
 using EnvioSafTApp.Services;
 using EnvioSafTApp.Services.Interfaces;
 using EnvioSafTApp.ViewModels;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -68,8 +69,21 @@ namespace EnvioSafTApp
             }
         }
 
-
-
-
+        private void Hyperlink_RequestNavigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = e.Uri.AbsoluteUri,
+                    UseShellExecute = true
+                });
+                e.Handled = true;
+            }
+            catch (Exception ex)
+            {
+                // Silently fail if browser can't be opened
+            }
+        }
     }
 }
