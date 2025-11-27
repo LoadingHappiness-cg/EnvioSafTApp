@@ -10,15 +10,22 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using EnvioSafTApp.Services.Interfaces;
+
 namespace EnvioSafTApp.Services
 {
-    public static class JarUpdateService
+    public class JarUpdateService : IJarUpdateService
     {
         private const string DefaultJarFileName = "EnviaSaft.jar";
         private const string MetadataFileName = "EnviaSaft.jar.metadata.json";
         private static readonly Uri JarDownloadUri = new Uri("https://www.portaldasfinancas.gov.pt/static/docs/factemi/EnviaSaft.jar");
-        private static readonly HttpClient HttpClient = CreateClient();
+        private readonly HttpClient _httpClient;
         private static readonly Regex JarExecutionRegex = new Regex(@"java\s+-jar\s+(?:(['""])(?<path>[^'""]+)\1|(?<path>[^\s]+))", RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
+        public JarUpdateService()
+        {
+            _httpClient = CreateClient();
+        }
 
         private static HttpClient CreateClient()
         {
@@ -30,7 +37,7 @@ namespace EnvioSafTApp.Services
             return client;
         }
 
-        public static async Task<JarUpdateResult> EnsureLatestAsync(CancellationToken cancellationToken)
+        public async Task<JarUpdateResult> EnsureLatestAsync(CancellationToken cancellationToken)
         {
             string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
             string libsFolder = Path.Combine(baseDirectory, "libs");
@@ -63,7 +70,7 @@ namespace EnvioSafTApp.Services
                     request.Headers.IfModifiedSince = lastModified;
                 }
 
-                response = await HttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+                response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
 
                 if (response.StatusCode == HttpStatusCode.NotModified && File.Exists(jarPath))
                 {
@@ -86,7 +93,7 @@ namespace EnvioSafTApp.Services
                 if (response.StatusCode == HttpStatusCode.NotModified)
                 {
                     response.Dispose();
-                    response = await HttpClient.GetAsync(JarDownloadUri, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+                    response = await _httpClient.GetAsync(JarDownloadUri, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
                 }
 
                 if (!response.IsSuccessStatusCode)
@@ -303,7 +310,7 @@ namespace EnvioSafTApp.Services
             return NormalizePath(lastPath);
         }
 
-        public static async Task<(string? SavedPath, bool IsNew)> RememberJarAsync(string? jarPath, CancellationToken cancellationToken)
+        public async Task<(string? SavedPath, bool IsNew)> RememberJarAsync(string? jarPath, CancellationToken cancellationToken)
         {
             string? normalized = NormalizePath(jarPath);
             if (string.IsNullOrWhiteSpace(normalized) || !File.Exists(normalized))
@@ -430,7 +437,7 @@ namespace EnvioSafTApp.Services
             }
         }
 
-        public static string GetLocalJarPath()
+        public string GetLocalJarPath()
         {
             string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
             string libsFolder = Path.Combine(baseDirectory, "libs");

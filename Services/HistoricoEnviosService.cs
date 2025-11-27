@@ -7,19 +7,20 @@ using System.Text;
 using System.Text.Json;
 using System.Windows;
 using EnvioSafTApp.Models;
+using EnvioSafTApp.Services.Interfaces;
 
 namespace EnvioSafTApp.Services
 {
-    public static class HistoricoEnviosService
+    public class HistoricoEnviosService : IHistoricoEnviosService
     {
-        private static readonly string _baseFolder = Path.Combine(
+        private readonly string _baseFolder = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "EnviaSaft",
             "HistoricoEnvios");
 
-        public static string BaseFolder => _baseFolder;
+        public string BaseFolder => _baseFolder;
 
-        public static void RegistarEnvio(EnvioHistoricoEntry entry)
+        public void RegistarEnvio(EnvioHistoricoEntry entry)
         {
             try
             {
@@ -57,7 +58,7 @@ namespace EnvioSafTApp.Services
             }
         }
 
-        public static string GuardarLog(EnvioHistoricoEntry entry, string resumo, string output, string error)
+        public string GuardarLog(EnvioHistoricoEntry entry, string resumo, string output, string error)
         {
             try
             {
@@ -105,7 +106,7 @@ namespace EnvioSafTApp.Services
             }
         }
 
-        public static List<EnvioHistoricoEntry> ObterHistorico()
+        public List<EnvioHistoricoEntry> ObterHistorico()
         {
             var lista = new List<EnvioHistoricoEntry>();
 
@@ -163,7 +164,7 @@ namespace EnvioSafTApp.Services
             return lista;
         }
 
-        public static void ExportarCsv(IEnumerable<EnvioHistoricoEntry> entradas, string destino)
+        public void ExportarCsv(IEnumerable<EnvioHistoricoEntry> entradas, string destino)
         {
             var lista = entradas.ToList();
             if (!lista.Any())

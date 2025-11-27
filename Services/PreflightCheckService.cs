@@ -7,13 +7,23 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using EnvioSafTApp.Services.Interfaces;
+
 namespace EnvioSafTApp.Services
 {
-    public static class PreflightCheckService
+    public class PreflightCheckService : IPreflightCheckService
     {
         private static readonly string[] JavaCommands = new[] { "java", "java.exe" };
+        private readonly IJarUpdateService _jarUpdateService;
+        private readonly IHistoricoEnviosService _historicoEnviosService;
 
-        public static async Task<IReadOnlyList<PreflightCheckResult>> RunAsync()
+        public PreflightCheckService(IJarUpdateService jarUpdateService, IHistoricoEnviosService historicoEnviosService)
+        {
+            _jarUpdateService = jarUpdateService;
+            _historicoEnviosService = historicoEnviosService;
+        }
+
+        public async Task<IReadOnlyList<PreflightCheckResult>> RunAsync()
         {
             var checks = new List<PreflightCheckResult>
             {
@@ -25,7 +35,7 @@ namespace EnvioSafTApp.Services
             return checks;
         }
 
-        private static async Task<PreflightCheckResult> VerificarJavaAsync()
+        private async Task<PreflightCheckResult> VerificarJavaAsync()
         {
             var resultado = new PreflightCheckResult
             {
@@ -76,9 +86,9 @@ namespace EnvioSafTApp.Services
             return resultado;
         }
 
-        private static PreflightCheckResult VerificarJar()
+        private PreflightCheckResult VerificarJar()
         {
-            string jarPath = JarUpdateService.GetLocalJarPath();
+            string jarPath = _jarUpdateService.GetLocalJarPath();
             bool existe = File.Exists(jarPath);
             string fileName = Path.GetFileName(jarPath);
 
@@ -95,9 +105,9 @@ namespace EnvioSafTApp.Services
             };
         }
 
-        private static PreflightCheckResult VerificarPermissoesEscrita()
+        private PreflightCheckResult VerificarPermissoesEscrita()
         {
-            string pastaHistorico = HistoricoEnviosService.BaseFolder;
+            string pastaHistorico = _historicoEnviosService.BaseFolder;
             string pastaTemp = Path.Combine(Path.GetTempPath(), "EnviaSaftAppTest");
 
             var sb = new StringBuilder();
