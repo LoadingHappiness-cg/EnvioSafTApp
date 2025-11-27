@@ -268,10 +268,16 @@ namespace EnvioSafTApp.ViewModels
                 if (nifNode != null)
                     Nif = nifNode.InnerText;
 
-                // NomeEmpresa logic - we need a property for this?
-                // var nameNode = doc.SelectSingleNode("//pt:Header/pt:BusinessName", nsMgr);
-                // if (nameNode != null)
-                //     _nomeEmpresa = nameNode.InnerText.Trim();
+                var nameNode = doc.SelectSingleNode("//pt:Header/pt:BusinessName", nsMgr)
+                               ?? doc.SelectSingleNode("//pt:Header/pt:CompanyName", nsMgr);
+                if (nameNode != null)
+                {
+                    var nome = nameNode.InnerText?.Trim();
+                    if (!string.IsNullOrWhiteSpace(nome))
+                    {
+                        NomeEmpresa = nome;
+                    }
+                }
 
                 var dataNode = doc.SelectSingleNode("//pt:SourceDocuments//pt:Invoice/pt:InvoiceDate", nsMgr) ??
                                doc.SelectSingleNode("//pt:SourceDocuments//pt:Transaction/pt:TransactionDate", nsMgr);
@@ -453,7 +459,7 @@ namespace EnvioSafTApp.ViewModels
                 // Guardar no histórico
                 var entrada = new EnvioHistoricoEntry
                 {
-                    EmpresaNome = NomeEmpresa,
+                    EmpresaNome = string.IsNullOrWhiteSpace(NomeEmpresa) ? "Desconhecida" : NomeEmpresa,
                     NIF = Nif,
                     DataHora = dataEnvio,
                     Ano = int.TryParse(Ano, out var anoInt) ? anoInt : DateTime.Now.Year,
