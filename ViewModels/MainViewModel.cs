@@ -130,6 +130,10 @@ namespace EnvioSafTApp.ViewModels
         [ObservableProperty]
         private bool _isAutoFaturacao;
 
+        // Indica se um envio está em curso; usado para bloquear o botão ENVIAR e mostrar spinner
+        [ObservableProperty]
+        private bool _isSending;
+
         [ObservableProperty]
         private string _arquivoPassword = "";
 
@@ -297,14 +301,23 @@ namespace EnvioSafTApp.ViewModels
         [RelayCommand]
         private async Task EnviarAsync()
         {
-            if (!ValidarCamposObrigatorios())
-                return;
+            if (IsSending)
+                return; // evita reentradas
 
-            if (!File.Exists(FicheiroSafT))
+            IsSending = true;
+
+            if (!ValidarCamposObrigatorios())
             {
-                ShowTicker("Ficheiro SAF-T não encontrado.", TickerMessageType.Error);
+                IsSending = false;
                 return;
             }
+
+             if (!File.Exists(FicheiroSafT))
+             {
+                ShowTicker("Ficheiro SAF-T não encontrado.", TickerMessageType.Error);
+                IsSending = false;
+                return;
+             }
 
             // Utilizar jar local; apenas tentar descarregar se não existir.
             string jarPath = _jarUpdateService.GetLocalJarPath();
@@ -477,6 +490,10 @@ namespace EnvioSafTApp.ViewModels
             catch (Exception ex)
             {
                 ShowTicker($"Erro ao executar o envio: {ex.Message}", TickerMessageType.Error);
+            }
+            finally
+            {
+                IsSending = false;
             }
         }
 

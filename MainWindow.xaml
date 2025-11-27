@@ -8,6 +8,7 @@
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
         <converters:TickerTypeToColorConverter x:Key="TickerTypeToColorConverter"/>
+        <converters:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
     </Window.Resources>
 
     <Grid Background="#F5F7FA">
@@ -43,13 +44,12 @@
                 </StackPanel>
 
                 <Button Grid.Column="2"
-                        Content="✉️ ENVIAR"
-                        Style="{StaticResource PrimaryButtonStyle}"
+                        Content="ENVIAR"
+                        Style="{StaticResource ModernSendButtonStyle}"
                         Command="{Binding EnviarCommand}"
                         Margin="0,0,12,0"
-                        Padding="18,10"
-                        FontWeight="SemiBold"
-                        VerticalAlignment="Center"/>
+                        VerticalAlignment="Center"
+                        IsEnabled="{Binding IsSending, Converter={StaticResource InverseBooleanConverter}}"/>
 
                 <Border Grid.Column="3" Background="#26FFFFFF" Padding="12,8" CornerRadius="12" VerticalAlignment="Center">
                     <TextBlock Text="{Binding AppVersion}"
