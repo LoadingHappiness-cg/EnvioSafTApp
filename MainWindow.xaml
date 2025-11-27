@@ -12,27 +12,43 @@
 
     <Grid Background="#F5F7FA">
         <Grid.RowDefinitions>
-            <RowDefinition Height="70"/>
+            <RowDefinition Height="88"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="40"/>
         </Grid.RowDefinitions>
 
         <!-- Cabeçalho -->
-        <Border Grid.Row="0" Padding="20,15">
+        <Border Grid.Row="0" Padding="20,12" CornerRadius="0,0,14,14" >
             <Border.Background>
-                <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
-                    <GradientStop Color="#FFE8F4F8" Offset="1"/>
-                    <GradientStop Color="#FF64B5F6" Offset="0"/>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="#FF4FA3E6" Offset="0"/>
+                    <GradientStop Color="#FF6BC8F4" Offset="1"/>
                 </LinearGradientBrush>
             </Border.Background>
             <Grid>
-                <Image x:Name="Logo" Source="/EnviaSaft.png" HorizontalAlignment="Left" Height="40"/>
-                <TextBlock Text="{Binding AppVersion}" 
-                          Foreground="White" 
-                          FontSize="11" 
-                          VerticalAlignment="Bottom" 
-                          HorizontalAlignment="Right"
-                          Margin="0,0,10,5"/>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border Background="#1AFFFFFF" Padding="10" CornerRadius="12" Margin="0,0,10,0">
+                        <Image x:Name="Logo" Source="/EnviaSaft.png" Height="42"/>
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Envio SAF-T AT" Foreground="White" FontSize="18" FontWeight="Bold"/>
+                        <TextBlock Text="Aplicação gratuita para envio de SAF-T para a AT" Foreground="#E0F3FF" FontSize="12" Margin="0,2,0,0"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <Border Grid.Column="2" Background="#26FFFFFF" Padding="12,8" CornerRadius="12" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding AppVersion}"
+                               Foreground="White"
+                               FontSize="12"
+                               FontWeight="SemiBold"
+                               VerticalAlignment="Center"
+                               HorizontalAlignment="Center"/>
+                </Border>
             </Grid>
         </Border>
 

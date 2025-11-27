@@ -306,40 +306,28 @@ namespace EnvioSafTApp.ViewModels
                 return;
             }
 
-            var jarUpdateResult = await _jarUpdateService.EnsureLatestAsync(CancellationToken.None);
-            string jarFileName = Path.GetFileName(jarUpdateResult.JarPath);
-
-            if (!jarUpdateResult.Success)
-            {
-                var message = jarUpdateResult.Message ?? $"Não foi possível preparar o {jarFileName}.";
-                ShowTicker(message, jarUpdateResult.UsedFallback ? TickerMessageType.Warning : TickerMessageType.Error);
-
-                if (!jarUpdateResult.UsedFallback)
-                {
-                    return;
-                }
-            }
-            else
-            {
-                if (jarUpdateResult.Updated)
-                {
-                    ShowTicker(jarUpdateResult.Message ?? $"Foi descarregada a versão mais recente do {jarFileName}.", TickerMessageType.Info);
-                }
-                else if (jarUpdateResult.UsedFallback)
-                {
-                    var message = jarUpdateResult.Message ?? $"Não foi possível confirmar atualizações do {jarFileName}; a versão local será utilizada.";
-                    ShowTicker(message, TickerMessageType.Warning);
-                }
-            }
-
-            string jarPath = jarUpdateResult.JarPath;
-            string updatePath = Path.GetDirectoryName(jarPath) ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "libs");
+            // Utilizar jar local; apenas tentar descarregar se não existir.
+            string jarPath = _jarUpdateService.GetLocalJarPath();
+            string jarFileName = Path.GetFileName(jarPath);
 
             if (!File.Exists(jarPath))
             {
-                ShowTicker($"O ficheiro {jarFileName} não está disponível após a tentativa de atualização.", TickerMessageType.Error);
-                return;
+                var jarUpdateResult = await _jarUpdateService.EnsureLatestAsync(CancellationToken.None);
+                jarPath = jarUpdateResult.JarPath;
+                jarFileName = Path.GetFileName(jarPath);
+
+                if (!jarUpdateResult.Success || !File.Exists(jarPath))
+                {
+                    var message = jarUpdateResult.Message ?? $"Não foi possível preparar o {jarFileName}. Coloque o ficheiro .jar na pasta 'libs'.";
+                    ShowTicker(message, jarUpdateResult.UsedFallback ? TickerMessageType.Warning : TickerMessageType.Error);
+                    if (!jarUpdateResult.UsedFallback)
+                    {
+                        return;
+                    }
+                }
             }
+
+            string updatePath = Path.GetDirectoryName(jarPath) ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "libs");
 
             OutputText = "";
             OutputSummary = string.Empty;
