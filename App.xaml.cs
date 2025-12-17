@@ -31,6 +31,7 @@ namespace EnvioSafTApp
             services.AddSingleton<IJarUpdateService, JarUpdateService>();
             services.AddSingleton<IHistoricoEnviosService, HistoricoEnviosService>();
             services.AddSingleton<IPreflightCheckService, PreflightCheckService>();
+            services.AddSingleton<ISaftValidationService, SaftValidationService>();
             services.AddSingleton<IFileService, FileService>();
 
             // ViewModels
