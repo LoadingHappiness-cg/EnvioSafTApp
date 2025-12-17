@@ -22,6 +22,7 @@ namespace EnvioSafTApp.ViewModels
         private readonly IJarUpdateService _jarUpdateService;
         private readonly IPreflightCheckService _preflightCheckService;
         private readonly IHistoricoEnviosService _historicoEnviosService;
+        private readonly ISaftValidationService _saftValidationService;
 
         [ObservableProperty]
         private string _appVersion = "1.0.0";
@@ -57,6 +58,22 @@ namespace EnvioSafTApp.ViewModels
 
         [ObservableProperty]
         private string _ultimoLogPath = "";
+
+        // Validação SAF-T
+        [ObservableProperty]
+        private string _saftValidationSummary = "Selecione um ficheiro SAF-T para validar.";
+
+        [ObservableProperty]
+        private string _saftSchemaInfo = "";
+
+        [ObservableProperty]
+        private ObservableCollection<SaftValidationIssue> _saftValidationIssues = new();
+
+        [ObservableProperty]
+        private ObservableCollection<string> _saftValidationSugestoes = new();
+
+        [ObservableProperty]
+        private bool _isSaftValidationRunning;
 
         // History Properties
         [ObservableProperty]
@@ -123,6 +140,21 @@ namespace EnvioSafTApp.ViewModels
 
         [ObservableProperty]
         private string _ficheiroSafT = "";
+        partial void OnFicheiroSafTChanged(string value)
+        {
+            SaftValidationIssues.Clear();
+            SaftValidationSugestoes.Clear();
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                SaftValidationSummary = "Selecione um ficheiro SAF-T para validar.";
+                SaftSchemaInfo = "";
+            }
+            else
+            {
+                SaftValidationSummary = "Ficheiro pronto para validação contra o XSD oficial da AT.";
+                SaftSchemaInfo = $"Ficheiro: {Path.GetFileName(value)}";
+            }
+        }
 
         [ObservableProperty]
         private bool _isTeste;
@@ -156,11 +188,13 @@ namespace EnvioSafTApp.ViewModels
             IJarUpdateService jarUpdateService,
             IPreflightCheckService preflightCheckService,
             IHistoricoEnviosService historicoEnviosService,
+            ISaftValidationService saftValidationService,
             IFileService fileService)
         {
             _jarUpdateService = jarUpdateService;
             _preflightCheckService = preflightCheckService;
             _historicoEnviosService = historicoEnviosService;
+            _saftValidationService = saftValidationService;
             _fileService = fileService;
             
             AppVersion = $"v{GetVersion()} – loadinghappiness.pt";
@@ -199,6 +233,71 @@ namespace EnvioSafTApp.ViewModels
                 {
                     ShowTicker($"Erro ao extrair ficheiro: {ex.Message}", TickerMessageType.Error);
                 }
+            }
+        }
+
+        [RelayCommand]
+        private async Task ValidarSafTAsync()
+        {
+            if (IsSaftValidationRunning)
+            {
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(FicheiroSafT) || !File.Exists(FicheiroSafT))
+            {
+                ShowTicker("Selecione um ficheiro SAF-T válido antes de validar.", TickerMessageType.Warning);
+                return;
+            }
+
+            IsSaftValidationRunning = true;
+            SaftValidationIssues.Clear();
+            SaftValidationSugestoes.Clear();
+            SaftValidationSummary = "A validar ficheiro SAF-T...";
+
+            try
+            {
+                var resultado = await _saftValidationService.ValidateAsync(FicheiroSafT, CancellationToken.None);
+                SaftValidationSummary = resultado.Resumo;
+                SaftSchemaInfo = resultado.EsquemaDisponivel
+                    ? $"XSD: {resultado.OrigemXsd}"
+                    : "XSD oficial indisponível. A validação não pôde ser executada.";
+
+                foreach (var issue in resultado.Problemas
+                             .OrderByDescending(i => i.Severidade == "Erro")
+                             .ThenBy(i => i.Linha ?? int.MaxValue)
+                             .ThenBy(i => i.Coluna ?? int.MaxValue))
+                {
+                    SaftValidationIssues.Add(issue);
+                }
+
+                foreach (var sugestao in resultado.Sugestoes.Distinct())
+                {
+                    SaftValidationSugestoes.Add(sugestao);
+                }
+
+                var tickerType = resultado.Sucesso
+                    ? TickerMessageType.Success
+                    : resultado.EsquemaDisponivel
+                        ? TickerMessageType.Warning
+                        : TickerMessageType.Error;
+
+                var tickerMessage = resultado.MensagemEstado ?? resultado.Resumo;
+                ShowTicker(tickerMessage, tickerType);
+            }
+            catch (OperationCanceledException)
+            {
+                SaftValidationSummary = "Validação cancelada.";
+                ShowTicker("Validação cancelada.", TickerMessageType.Warning);
+            }
+            catch (Exception ex)
+            {
+                SaftValidationSummary = $"Erro ao validar SAF-T: {ex.Message}";
+                ShowTicker(SaftValidationSummary, TickerMessageType.Error);
+            }
+            finally
+            {
+                IsSaftValidationRunning = false;
             }
         }
 

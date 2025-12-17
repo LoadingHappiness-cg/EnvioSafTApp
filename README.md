@@ -8,6 +8,7 @@
 
 - Suporte a ficheiros `.xml`, `.zip`, `.rar`, `.gz`, `.tar`
 - Extração automática e envio do ficheiro SAF-T interno
+- Validação do ficheiro SAF-T contra o XSD oficial da AT, com resumo e sugestões de correção
 - Histórico de envios por empresa/ano/mês
 - Animações e ajuda contextual
 - Registo automático de envios e ficheiros de resposta
@@ -20,6 +21,7 @@
 - Java instalado (para correr o cliente oficial `.jar` da AT — o nome do ficheiro pode variar)
 - .NET 6.0 ou superior
 - Windows 10/11
+- (Opcional) Acesso à internet no primeiro arranque para descarregar automaticamente o XSD oficial SAFTPT1.04_01.xsd. Se preferir, coloque manualmente esse ficheiro em `C:\Users\<UTILIZADOR>\AppData\Roaming\EnviaSaft\schemas`.
 
 ---
 
@@ -29,6 +31,7 @@
 2. Preenche os dados obrigatórios (NIF, password, ano, mês)
 3. Envia e obtém o resultado em tempo real
 4. Consulta os envios anteriores na aba **Histórico**
+5. (Opcional) Antes de enviar, usa a aba **Pré-validação** para validar o ficheiro SAF-T contra o XSD oficial e seguir as sugestões de correção apresentadas
 
 ---
 
