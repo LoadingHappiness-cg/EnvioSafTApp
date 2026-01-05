@@ -18,7 +18,7 @@
 
 ## 📦 Requisitos
 
-- Java instalado (para correr o cliente oficial `.jar` da AT — o nome do ficheiro pode variar)
+- Java instalado (para a validação XSD e para correr o cliente oficial `.jar` da AT — o nome do ficheiro pode variar)
 - .NET 6.0 ou superior
 - Windows 10/11
 - (Opcional) Acesso à internet no primeiro arranque para descarregar automaticamente o XSD oficial SAFTPT1.04_01.xsd. Se preferir, coloque manualmente esse ficheiro em `C:\Users\<UTILIZADOR>\AppData\Roaming\EnviaSaft\schemas`.
