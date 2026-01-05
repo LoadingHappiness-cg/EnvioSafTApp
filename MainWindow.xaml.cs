@@ -80,7 +80,7 @@ namespace EnvioSafTApp
                 });
                 e.Handled = true;
             }
-            catch (Exception ex)
+            catch
             {
                 // Silently fail if browser can't be opened
             }

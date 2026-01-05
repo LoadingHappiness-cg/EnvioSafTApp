@@ -560,8 +560,8 @@
                                           Margin="0,0,0,20"/>
                                 
                                 <TextBlock HorizontalAlignment="Center">
-                                    <Hyperlink NavigateUri="https://www.loadinghappiness.pt" RequestNavigate="Hyperlink_RequestNavigate">
-                                        www.loadinghappiness.pt
+                                    <Hyperlink NavigateUri="https://loadinghappiness.com" RequestNavigate="Hyperlink_RequestNavigate">
+                                        loadinghappiness.com
                                     </Hyperlink>
                                 </TextBlock>
                             </StackPanel>
