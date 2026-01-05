@@ -69,7 +69,19 @@ namespace EnvioSafTApp.Services
             {
                 if (!string.IsNullOrEmpty(schemaPath))
                 {
-                    schemas.Add(null, schemaPath);
+                    try
+                    {
+                        schemas.Add(null, schemaPath);
+                        schemas.Compile();
+                    }
+                    catch (XmlSchemaException schemaEx)
+                    {
+                        resultado.Resumo = $"O ficheiro XSD está corrompido ou inválido: {schemaEx.Message}";
+                        resultado.MensagemEstado = resultado.Resumo;
+                        resultado.Sugestoes.Add("Volte a descarregar o ficheiro SAFTPT1.04_01.xsd a partir do portal da AT.");
+                        resultado.Sugestoes.Add("Elimine o ficheiro inválido em: " + Path.GetDirectoryName(_schemaFilePath));
+                        return resultado;
+                    }
                 }
             }
             catch (Exception ex)
@@ -183,7 +195,18 @@ namespace EnvioSafTApp.Services
 
                 if (File.Exists(_schemaFilePath))
                 {
-                    return _schemaFilePath;
+                    if (IsValidXsdFile(_schemaFilePath))
+                    {
+                        return _schemaFilePath;
+                    }
+                    else
+                    {
+                        try
+                        {
+                            File.Delete(_schemaFilePath);
+                        }
+                        catch { }
+                    }
                 }
             }
             catch
@@ -196,17 +219,71 @@ namespace EnvioSafTApp.Services
                 try
                 {
                     var bytes = await HttpClient.GetByteArrayAsync(url, cancellationToken);
+                    if (bytes == null || bytes.Length == 0)
+                    {
+                        continue;
+                    }
+
+                    var folder = Path.GetDirectoryName(_schemaFilePath);
+                    if (!string.IsNullOrWhiteSpace(folder) && !Directory.Exists(folder))
+                    {
+                        Directory.CreateDirectory(folder);
+                    }
+
                     await File.WriteAllBytesAsync(_schemaFilePath, bytes, cancellationToken);
-                    return _schemaFilePath;
+
+                    if (IsValidXsdFile(_schemaFilePath))
+                    {
+                        return _schemaFilePath;
+                    }
+                    else
+                    {
+                        try
+                        {
+                            File.Delete(_schemaFilePath);
+                        }
+                        catch { }
+                    }
                 }
                 catch
                 {
-                    // tentar próximo URL
                     continue;
                 }
             }
 
             return null;
+        }
+
+        private static bool IsValidXsdFile(string filePath)
+        {
+            try
+            {
+                if (!File.Exists(filePath))
+                    return false;
+
+                using (var stream = File.OpenRead(filePath))
+                {
+                    if (stream.Length == 0)
+                        return false;
+
+                    var doc = new XmlDocument();
+                    doc.Load(stream);
+
+                    var root = doc.DocumentElement;
+                    if (root == null)
+                        return false;
+
+                    var isXsd = root.LocalName == "schema" &&
+                               (root.NamespaceURI == "http://www.w3.org/2001/XMLSchema" ||
+                                string.IsNullOrEmpty(root.NamespaceURI));
+
+                    return isXsd;
+                }
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         private static string ConstruirMensagemLegivel(ValidationEventArgs args)
