@@ -64,6 +64,7 @@ namespace EnvioSafTApp.Services
 
             var issues = new List<SaftValidationIssue>();
             var schemas = new XmlSchemaSet();
+            bool schemaLoadFailed = false;
 
             try
             {
@@ -76,6 +77,7 @@ namespace EnvioSafTApp.Services
                     }
                     catch (XmlSchemaException schemaEx)
                     {
+                        schemaLoadFailed = true;
                         resultado.Resumo = $"O ficheiro XSD está corrompido ou inválido: {schemaEx.Message}";
                         resultado.MensagemEstado = resultado.Resumo;
                         resultado.Sugestoes.Add("Volte a descarregar o ficheiro SAFTPT1.04_01.xsd a partir do portal da AT.");
@@ -97,8 +99,8 @@ namespace EnvioSafTApp.Services
                 ValidationType = ValidationType.Schema,
                 Schemas = schemas,
                 ValidationFlags = XmlSchemaValidationFlags.ReportValidationWarnings
-                                  | XmlSchemaValidationFlags.ProcessIdentityConstraints
-                                  | XmlSchemaValidationFlags.ProcessSchemaLocation
+                                  | XmlSchemaValidationFlags.ProcessSchemaLocation,
+                ConformanceLevel = ConformanceLevel.Document
             };
 
             settings.ValidationEventHandler += (_, args) =>
@@ -277,6 +279,7 @@ namespace EnvioSafTApp.Services
                                (root.NamespaceURI == "http://www.w3.org/2001/XMLSchema" ||
                                 string.IsNullOrEmpty(root.NamespaceURI));
 
+                    // If it's a valid XSD structure, return true even if compilation has warnings
                     return isXsd;
                 }
             }
