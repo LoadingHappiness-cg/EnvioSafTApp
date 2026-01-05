@@ -2,14 +2,14 @@ using EnvioSafTApp.Models;
 using EnvioSafTApp.Services.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Xml;
-using System.Xml.Schema;
 
 namespace EnvioSafTApp.Services
 {
@@ -22,11 +22,13 @@ namespace EnvioSafTApp.Services
         };
 
         private readonly string _schemaFilePath;
+        private readonly string _validatorJarPath;
 
         public SaftValidationService()
         {
             var baseFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "EnviaSaft");
             _schemaFilePath = Path.Combine(baseFolder, "schemas", "SAFTPT1.04_01.xsd");
+            _validatorJarPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "libs", "xsd11-validator.jar");
         }
 
         public async Task<SaftValidationResult> ValidateAsync(string caminhoSafT, CancellationToken cancellationToken)
@@ -62,10 +64,7 @@ namespace EnvioSafTApp.Services
                 return resultado;
             }
 
-            var issues = new List<SaftValidationIssue>();
-            var schemas = new XmlSchemaSet();
-
-            try
+            if (!File.Exists(_validatorJarPath))
             {
                 if (!string.IsNullOrEmpty(schemaPath))
                 {
@@ -76,57 +75,58 @@ namespace EnvioSafTApp.Services
             {
                 resultado.Resumo = $"Falha ao carregar o XSD: {ex.Message}";
                 resultado.MensagemEstado = resultado.Resumo;
-                resultado.Sugestoes.Add("Volte a descarregar o ficheiro SAFTPT1.04_01.xsd a partir do portal da AT e repita a validação.");
+                resultado.Sugestoes.Add($"Certifique-se de que o ficheiro 'xsd11-validator.jar' está localizado em: {Path.GetDirectoryName(_validatorJarPath)}");
                 return resultado;
             }
 
-            var settings = new XmlReaderSettings
-            {
-                ValidationType = ValidationType.Schema,
-                Schemas = schemas,
-                ValidationFlags = XmlSchemaValidationFlags.ReportValidationWarnings
-                                  | XmlSchemaValidationFlags.ProcessIdentityConstraints
-                                  | XmlSchemaValidationFlags.ProcessSchemaLocation
-            };
-
-            settings.ValidationEventHandler += (_, args) =>
-            {
-                var issue = new SaftValidationIssue
-                {
-                    Severidade = args.Severity == XmlSeverityType.Warning ? "Aviso" : "Erro",
-                    Mensagem = ConstruirMensagemLegivel(args),
-                    Linha = args.Exception?.LineNumber > 0 ? args.Exception?.LineNumber : null,
-                    Coluna = args.Exception?.LinePosition > 0 ? args.Exception?.LinePosition : null,
-                    Sugestao = CriarSugestao(args.Message)
-                };
-
-                issues.Add(issue);
-            };
-
+            var issues = new List<SaftValidationIssue>();
             try
             {
-                using var stream = File.OpenRead(caminhoSafT);
-                using var reader = XmlReader.Create(stream, settings);
-
-                while (reader.Read())
+                var process = new Process
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = "java",
+                        Arguments = $"-jar \"{_validatorJarPath}\" -sf \"{schemaPath}\" -if \"{caminhoSafT}\"",
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    }
+                };
+
+                var output = new StringBuilder();
+                process.OutputDataReceived += (sender, args) => output.AppendLine(args.Data);
+                process.ErrorDataReceived += (sender, args) => output.AppendLine(args.Data);
+
+                process.Start();
+                process.BeginOutputReadLine();
+                process.BeginErrorReadLine();
+                await process.WaitForExitAsync(cancellationToken);
+
+                var outputString = output.ToString();
+                if (process.ExitCode != 0)
+                {
+                    var errorLines = outputString.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                    foreach (var line in errorLines)
+                    {
+                        if (line.StartsWith("Error:") || line.StartsWith("Exception in thread"))
+                        {
+                           issues.Add(ParseErrorLine(line));
+                        }
+                    }
                 }
-            }
-            catch (OperationCanceledException)
-            {
-                throw;
             }
             catch (Exception ex)
             {
-                resultado.Resumo = $"Não foi possível concluir a validação: {ex.Message}";
+                resultado.Resumo = $"Falha ao executar o validador XSD: {ex.Message}";
                 resultado.MensagemEstado = resultado.Resumo;
-                resultado.Sugestoes.Add("Confirme se o ficheiro é um SAF-T válido e tente novamente.");
+                resultado.Sugestoes.Add("Certifique-se de que o Java está instalado e acessível a partir da linha de comandos.");
                 return resultado;
             }
 
             resultado.Problemas = issues;
-            resultado.Sucesso = issues.All(i => i.Severidade != "Erro");
+            resultado.Sucesso = !issues.Any();
 
             var erros = resultado.TotalErros;
             var avisos = resultado.TotalAvisos;
@@ -171,6 +171,20 @@ namespace EnvioSafTApp.Services
             return resultado;
         }
 
+        private SaftValidationIssue ParseErrorLine(string line)
+        {
+            var issue = new SaftValidationIssue { Severidade = "Erro", Mensagem = line };
+            var match = Regex.Match(line, @"cvc-[^:]+:\s+(.*)\s+\[Line\s+(\d+),\s+Column\s+(\d+)\]");
+            if (match.Success)
+            {
+                issue.Mensagem = Sanitize(match.Groups[1].Value);
+                issue.Linha = int.Parse(match.Groups[2].Value);
+                issue.Coluna = int.Parse(match.Groups[3].Value);
+                issue.Sugestao = CriarSugestao(issue.Mensagem);
+            }
+            return issue;
+        }
+
         private async Task<string?> GarantirSchemaAsync(CancellationToken cancellationToken)
         {
             try
@@ -207,20 +221,6 @@ namespace EnvioSafTApp.Services
             }
 
             return null;
-        }
-
-        private static string ConstruirMensagemLegivel(ValidationEventArgs args)
-        {
-            var mensagem = Sanitize(args.Message);
-            var linha = args.Exception?.LineNumber ?? 0;
-            var coluna = args.Exception?.LinePosition ?? 0;
-
-            if (linha > 0 || coluna > 0)
-            {
-                return $"Linha {linha}, Coluna {coluna}: {mensagem}";
-            }
-
-            return mensagem;
         }
 
         private static string Sanitize(string? mensagem)
