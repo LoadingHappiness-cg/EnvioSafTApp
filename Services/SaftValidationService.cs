@@ -66,7 +66,14 @@ namespace EnvioSafTApp.Services
 
             if (!File.Exists(_validatorJarPath))
             {
-                resultado.Resumo = "O ficheiro do validador XSD (xsd11-validator.jar) não foi encontrado.";
+                if (!string.IsNullOrEmpty(schemaPath))
+                {
+                    schemas.Add(null, schemaPath);
+                }
+            }
+            catch (Exception ex)
+            {
+                resultado.Resumo = $"Falha ao carregar o XSD: {ex.Message}";
                 resultado.MensagemEstado = resultado.Resumo;
                 resultado.Sugestoes.Add($"Certifique-se de que o ficheiro 'xsd11-validator.jar' está localizado em: {Path.GetDirectoryName(_validatorJarPath)}");
                 return resultado;
