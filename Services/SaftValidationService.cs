@@ -67,7 +67,10 @@ namespace EnvioSafTApp.Services
 
             try
             {
-                schemas.Add(null, schemaPath);
+                if (!string.IsNullOrEmpty(schemaPath))
+                {
+                    schemas.Add(null, schemaPath);
+                }
             }
             catch (Exception ex)
             {
