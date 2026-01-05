@@ -60,6 +60,6 @@ Se estiver atrás de um proxy HTTP/HTTPS configure `HTTP_PROXY` e `HTTPS_PROXY` 
 
 ## 🆓 Licença
 
-Distribuição gratuita. Desenvolvido por [Loading Happiness](https://www.loadinghappiness.pt).
+Distribuição gratuita. Desenvolvido por [Loading Happiness](https://loadinghappiness.com).
 
 ---

@@ -197,7 +197,7 @@ namespace EnvioSafTApp.ViewModels
             _saftValidationService = saftValidationService;
             _fileService = fileService;
             
-            AppVersion = $"v{GetVersion()} – loadinghappiness.pt";
+            AppVersion = $"v{GetVersion()} – loadinghappiness.com";
         }
 
         [RelayCommand]

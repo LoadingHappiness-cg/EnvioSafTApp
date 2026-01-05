@@ -18,8 +18,7 @@ namespace EnvioSafTApp.Services
         private static readonly HttpClient HttpClient = new();
         private static readonly string[] XsdUrls = new[]
         {
-            "https://info.portaldasfinancas.gov.pt/pt/apoio_contribuinte/SAFT_PT/Documents/SAFTPT1.04_01.xsd",
-            "https://info.portaldasfinancas.gov.pt/apps/saft-pt/SAFTPT1.04_01.xsd"
+            "https://info.portaldasfinancas.gov.pt/apps/saft-pt04/saftpt1.04_01.xsd"
         };
 
         private readonly string _schemaFilePath;
