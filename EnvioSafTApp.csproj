@@ -28,6 +28,9 @@
     <Content Include="libs\*.jar">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="libs\xsd11-validator.jar">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 	
   <ItemGroup>
