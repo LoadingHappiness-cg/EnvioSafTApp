@@ -1,40 +1,37 @@
-<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+<Styles xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Design.PreviewWith>
+        <Border Padding="20">
+            <!-- Add Controls for Previewer Here -->
+        </Border>
+    </Design.PreviewWith>
 
-    <!-- Cores como Brushes -->
-    <SolidColorBrush x:Key="PrimaryColorBrush" Color="#0078D7"/>
-    <SolidColorBrush x:Key="PrimaryHoverBrush" Color="#0063B1"/>
-    <SolidColorBrush x:Key="PrimaryForegroundBrush" Color="White"/>
-    <SolidColorBrush x:Key="TextBoxBorderBrush" Color="#CCC"/>
-    <SolidColorBrush x:Key="TextBoxFocusBorderBrush" Color="#0078D7"/>
+    <Styles.Resources>
+        <SolidColorBrush x:Key="PrimaryColorBrush" Color="#0078D7"/>
+        <SolidColorBrush x:Key="PrimaryHoverBrush" Color="#0063B1"/>
+        <SolidColorBrush x:Key="PrimaryForegroundBrush" Color="White"/>
+        <SolidColorBrush x:Key="TextBoxBorderBrush" Color="#CCC"/>
+        <SolidColorBrush x:Key="TextBoxFocusBorderBrush" Color="#0078D7"/>
+    </Styles.Resources>
 
     <!-- Botão Primário -->
-    <Style TargetType="Button" x:Key="PrimaryButtonStyle">
+    <Style Selector="Button.PrimaryButtonStyle">
         <Setter Property="Background" Value="{StaticResource PrimaryColorBrush}"/>
         <Setter Property="Foreground" Value="{StaticResource PrimaryForegroundBrush}"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
         <Setter Property="Padding" Value="10,5"/>
         <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="CornerRadius" Value="4"/>
         <Setter Property="Cursor" Value="Hand"/>
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="Button">
-                    <Border Background="{TemplateBinding Background}"
-                            CornerRadius="4">
-                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-        <Style.Triggers>
-            <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="Background" Value="{StaticResource PrimaryHoverBrush}"/>
-            </Trigger>
-        </Style.Triggers>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="Button.PrimaryButtonStyle:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{StaticResource PrimaryHoverBrush}"/>
     </Style>
 
-    <!-- Estilo moderno específico para o botão ENVIAR (maior, sem ícone, com spinner) -->
-    <Style x:Key="ModernSendButtonStyle" TargetType="Button" BasedOn="{StaticResource PrimaryButtonStyle}">
+    <!-- Botão ModernSendButtonStyle -->
+    <Style Selector="Button.ModernSendButtonStyle">
         <Setter Property="Height" Value="56"/>
         <Setter Property="MinWidth" Value="220"/>
         <Setter Property="FontSize" Value="16"/>
@@ -42,7 +39,7 @@
         <Setter Property="Padding" Value="20,8"/>
         <Setter Property="Background">
             <Setter.Value>
-                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
                     <GradientStop Color="#FF4FA3E6" Offset="0"/>
                     <GradientStop Color="#FF1976D2" Offset="1"/>
                 </LinearGradientBrush>
@@ -50,129 +47,56 @@
         </Setter>
         <Setter Property="Foreground" Value="White"/>
         <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="CornerRadius" Value="12"/>
         <Setter Property="Cursor" Value="Hand"/>
-        <Setter Property="Template">
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="Button.ModernSendButtonStyle:pointerover">
+        <Setter Property="RenderTransform" Value="scale(1.03)"/>
+    </Style>
+    <Style Selector="Button.ModernSendButtonStyle:pressed">
+        <Setter Property="RenderTransform" Value="scale(0.98)"/>
+        <Setter Property="Opacity" Value="0.95"/>
+    </Style>
+    <Style Selector="Button.ModernSendButtonStyle:disabled">
+        <Setter Property="Opacity" Value="0.85"/>
+        <Setter Property="Cursor" Value="Arrow"/>
+    </Style>
+    <Style Selector="Button.ModernSendButtonStyle:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background">
             <Setter.Value>
-                <ControlTemplate TargetType="Button">
-                    <Border x:Name="border"
-                            Background="{TemplateBinding Background}"
-                            CornerRadius="12"
-                            SnapsToDevicePixels="True"
-                            RenderTransformOrigin="0.5,0.5">
-                        <Border.RenderTransform>
-                            <ScaleTransform ScaleX="1" ScaleY="1"/>
-                        </Border.RenderTransform>
-
-                        <Grid Margin="6,0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-
-                            <!-- Spinner (visível quando botão desativado, por exemplo durante envio) -->
-                            <Viewbox Width="18" Height="18" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,0,10,0" Grid.Column="0" x:Name="Spinner" Visibility="Collapsed">
-                                <Canvas Width="24" Height="24">
-                                    <Path x:Name="SpinnerPath" Stroke="White" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
-                                          Data="M12,2 A10,10 0 0 1 22,12"
-                                          RenderTransformOrigin="0.5,0.5">
-                                        <Path.RenderTransform>
-                                            <RotateTransform x:Name="SpinnerRotate" Angle="0"/>
-                                        </Path.RenderTransform>
-                                    </Path>
-                                </Canvas>
-                            </Viewbox>
-
-                            <!-- Texto em destaque -->
-                            <ContentPresenter Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center" RecognizesAccessKey="True"/>
-                        </Grid>
-                    </Border>
-
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="border" Property="Effect">
-                                <Setter.Value>
-                                    <DropShadowEffect Color="#44000000" BlurRadius="12" ShadowDepth="3"/>
-                                </Setter.Value>
-                            </Setter>
-                            <Setter TargetName="border" Property="RenderTransform">
-                                <Setter.Value>
-                                    <ScaleTransform ScaleX="1.03" ScaleY="1.03"/>
-                                </Setter.Value>
-                            </Setter>
-                        </Trigger>
-
-                        <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="border" Property="RenderTransform">
-                                <Setter.Value>
-                                    <ScaleTransform ScaleX="0.98" ScaleY="0.98"/>
-                                </Setter.Value>
-                            </Setter>
-                            <Setter Property="Opacity" Value="0.95"/>
-                        </Trigger>
-
-                        <!-- Quando o botão estiver desativado exibimos o spinner e iniciamos rotação -->
-                        <Trigger Property="IsEnabled" Value="False">
-                            <Setter TargetName="Spinner" Property="Visibility" Value="Visible"/>
-                            <Trigger.EnterActions>
-                                <BeginStoryboard Name="SpinStoryboard">
-                                    <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetName="SpinnerRotate"
-                                                         Storyboard.TargetProperty="Angle"
-                                                         From="0" To="360" Duration="0:0:0.9" RepeatBehavior="Forever" />
-                                    </Storyboard>
-                                </BeginStoryboard>
-                            </Trigger.EnterActions>
-                            <Trigger.ExitActions>
-                                <StopStoryboard BeginStoryboardName="SpinStoryboard"/>
-                            </Trigger.ExitActions>
-                        </Trigger>
-
-                        <Trigger Property="IsEnabled" Value="True">
-                            <Setter TargetName="Spinner" Property="Visibility" Value="Collapsed"/>
-                        </Trigger>
-
-                        <Trigger Property="IsEnabled" Value="False">
-                            <Setter Property="Opacity" Value="0.85"/>
-                            <Setter Property="Cursor" Value="Arrow"/>
-                        </Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
+                <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                    <GradientStop Color="#FF4FA3E6" Offset="0"/>
+                    <GradientStop Color="#FF1976D2" Offset="1"/>
+                </LinearGradientBrush>
             </Setter.Value>
         </Setter>
     </Style>
 
+
     <!-- Botão Secundário -->
-    <Style TargetType="Button" x:Key="SecondaryButtonStyle">
+    <Style Selector="Button.SecondaryButtonStyle">
         <Setter Property="Background" Value="White"/>
         <Setter Property="Foreground" Value="#1E88E5"/>
         <Setter Property="BorderBrush" Value="#1E88E5"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
         <Setter Property="Padding" Value="10,5"/>
+        <Setter Property="CornerRadius" Value="4"/>
         <Setter Property="Cursor" Value="Hand"/>
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="Button">
-                    <Border Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="4">
-                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-        <Style.Triggers>
-            <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="Background" Value="#E3F2FD"/>
-            </Trigger>
-            <Trigger Property="IsPressed" Value="True">
-                <Setter Property="Background" Value="#BBDEFB"/>
-            </Trigger>
-        </Style.Triggers>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="Button.SecondaryButtonStyle:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="#E3F2FD"/>
+    </Style>
+    <Style Selector="Button.SecondaryButtonStyle:pressed /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="#BBDEFB"/>
     </Style>
 
-    <Style x:Key="ModernIconButtonStyle" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+    <!-- Botão ModernIconButtonStyle -->
+    <Style Selector="Button.ModernIconButtonStyle">
         <Setter Property="Background" Value="#0078D7"/>
         <Setter Property="Foreground" Value="White"/>
         <Setter Property="FontWeight" Value="Bold"/>
@@ -180,81 +104,45 @@
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Padding" Value="0"/>
         <Setter Property="Margin" Value="0"/>
+        <Setter Property="CornerRadius" Value="4"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="HorizontalAlignment" Value="Center"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="Button">
-                    <Border Background="{TemplateBinding Background}"
-                        BorderBrush="{TemplateBinding BorderBrush}"
-                        BorderThickness="{TemplateBinding BorderThickness}"
-                        CornerRadius="4">
-                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
     </Style>
 
     <!-- TextBox -->
-    <Style TargetType="TextBox" x:Key="ModernTextBoxStyle">
+    <Style Selector="TextBox.ModernTextBoxStyle">
         <Setter Property="Margin" Value="0,0,0,6"/>
         <Setter Property="Padding" Value="4"/>
         <Setter Property="BorderBrush" Value="{StaticResource TextBoxBorderBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="FontSize" Value="13"/>
         <Setter Property="Background" Value="White"/>
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="TextBox">
-                    <Border x:Name="Border"
-                            Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="3">
-                        <ScrollViewer Margin="0" x:Name="PART_ContentHost"/>
-                    </Border>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-        <Style.Triggers>
-            <Trigger Property="IsKeyboardFocused" Value="True">
-                <Setter Property="BorderBrush" Value="{StaticResource TextBoxFocusBorderBrush}"/>
-            </Trigger>
-        </Style.Triggers>
+        <Setter Property="CornerRadius" Value="3"/>
+    </Style>
+    <Style Selector="TextBox.ModernTextBoxStyle:focus /template/ Border#PART_BorderElement">
+        <Setter Property="BorderBrush" Value="{StaticResource TextBoxFocusBorderBrush}"/>
     </Style>
 
     <!-- PasswordBox -->
-    <Style TargetType="PasswordBox" x:Key="ModernPasswordBoxStyle">
+    <Style Selector="TextBox.ModernPasswordBoxStyle">
+        <Setter Property="PasswordChar" Value="●"/>
         <Setter Property="Margin" Value="0,0,0,6"/>
         <Setter Property="Padding" Value="4"/>
         <Setter Property="BorderBrush" Value="{StaticResource TextBoxBorderBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="FontSize" Value="13"/>
         <Setter Property="Background" Value="White"/>
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="PasswordBox">
-                    <Border x:Name="Border"
-                            Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="3">
-                        <ScrollViewer Margin="0" x:Name="PART_ContentHost"/>
-                    </Border>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-        <Style.Triggers>
-            <Trigger Property="IsKeyboardFocused" Value="True">
-                <Setter Property="BorderBrush" Value="{StaticResource TextBoxFocusBorderBrush}"/>
-            </Trigger>
-        </Style.Triggers>
+        <Setter Property="CornerRadius" Value="3"/>
+    </Style>
+    <Style Selector="TextBox.ModernPasswordBoxStyle:focus /template/ Border#PART_BorderElement">
+        <Setter Property="BorderBrush" Value="{StaticResource TextBoxFocusBorderBrush}"/>
     </Style>
 
     <!-- ComboBox -->
-    <Style TargetType="ComboBox" x:Key="ModernComboBoxStyle">
+    <Style Selector="ComboBox.ModernComboBoxStyle">
         <Setter Property="Margin" Value="0,0,0,6"/>
         <Setter Property="FontSize" Value="13"/>
         <Setter Property="Padding" Value="4"/>
@@ -263,25 +151,25 @@
         <Setter Property="Background" Value="White"/>
     </Style>
 
-    <!-- GroupBox -->
-    <Style TargetType="GroupBox" x:Key="ModernGroupBoxStyle">
+    <!-- GroupBox using avalonia's HeaderedContentControl or experimental border -->
+    <Style Selector="Border.ModernGroupBoxStyle">
         <Setter Property="Margin" Value="0,0,0,10"/>
         <Setter Property="Padding" Value="6"/>
         <Setter Property="BorderBrush" Value="#DDD"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Background" Value="White"/>
-        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="CornerRadius" Value="4"/>
     </Style>
 
-    <Style x:Key="HelpHeaderTextStyle" TargetType="TextBlock">
+    <!-- TextBlock -->
+    <Style Selector="TextBlock.HelpHeaderTextStyle">
         <Setter Property="FontSize" Value="14"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
         <Setter Property="Foreground" Value="#1E88E5"/>
-        <!-- Azul vivo -->
         <Setter Property="TextWrapping" Value="Wrap"/>
-        <Setter Property="Margin" Value="10 10 10 20"/>
+        <Setter Property="Margin" Value="10,10,10,20"/>
         <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
         <Setter Property="LineHeight" Value="20"/>
     </Style>
 
-</ResourceDictionary>
+</Styles>

@@ -1,14 +1,14 @@
 <Window x:Class="EnvioSafTApp.MainWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:converters="clr-namespace:EnvioSafTApp.Converters"
         Title="Envio SAF-T AT" Height="800" Width="1300" WindowStartupLocation="CenterScreen"
         MinWidth="1200"
         MinHeight="750">
     <Window.Resources>
-        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
         <converters:TickerTypeToColorConverter x:Key="TickerTypeToColorConverter"/>
         <converters:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
+        <converters:SaftSeverityToColorConverter x:Key="SaftSeverityToColorConverter"/>
     </Window.Resources>
 
     <Grid Background="#F5F7FA">
@@ -45,7 +45,7 @@
 
                 <Button Grid.Column="2"
                         Content="ENVIAR"
-                        Style="{StaticResource ModernSendButtonStyle}"
+                        Classes="ModernSendButtonStyle"
                         Command="{Binding EnviarCommand}"
                         Margin="0,0,12,0"
                         VerticalAlignment="Center"
@@ -74,7 +74,9 @@
             <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto">
                 <StackPanel>
                     <!-- Dados do Envio -->
-                    <GroupBox Header="📋 Dados do Envio" Style="{StaticResource ModernGroupBoxStyle}" Margin="0,0,0,15">
+                    <Border Classes="ModernGroupBoxStyle" Margin="0,0,0,15">
+                        <StackPanel>
+                            <TextBlock Text="📋 Dados do Envio" FontWeight="Bold" Margin="0,0,0,10"/>
                         <StackPanel Margin="15">
                             <!-- Ano, Mês, Operação -->
                             <Grid Margin="0,0,0,15">
@@ -88,7 +90,7 @@
                                     <TextBlock Text="Ano *" FontWeight="SemiBold" Margin="0,0,0,5"/>
                                     <TextBox x:Name="AnoTextBox"
                                             Text="{Binding Ano, UpdateSourceTrigger=PropertyChanged}"
-                                            Style="{StaticResource ModernTextBoxStyle}"
+                                            Classes="ModernTextBoxStyle"
                                             Height="34"/>
                                 </StackPanel>
                                 
@@ -96,7 +98,7 @@
                                     <TextBlock Text="Mês *" FontWeight="SemiBold" Margin="0,0,0,5"/>
                                     <TextBox x:Name="MesTextBox"
                                             Text="{Binding Mes, UpdateSourceTrigger=PropertyChanged}"
-                                            Style="{StaticResource ModernTextBoxStyle}"
+                                            Classes="ModernTextBoxStyle"
                                             Height="34"/>
                                 </StackPanel>
                                 
@@ -105,7 +107,7 @@
                                     <ComboBox x:Name="OperacaoComboBox"
                                              SelectedValue="{Binding Operacao}"
                                              SelectedValuePath="Content"
-                                             Style="{StaticResource ModernComboBoxStyle}"
+                                             Classes="ModernComboBoxStyle"
                                              Height="34">
                                         <ComboBoxItem Content="validar"/>
                                         <ComboBoxItem Content="enviar" IsSelected="True"/>
@@ -124,23 +126,27 @@
                                     <TextBlock Text="NIF *" FontWeight="SemiBold" Margin="0,0,0,5"/>
                                     <TextBox x:Name="NifTextBox"
                                             Text="{Binding Nif, UpdateSourceTrigger=PropertyChanged}"
-                                            Style="{StaticResource ModernTextBoxStyle}"
+                                            Classes="ModernTextBoxStyle"
                                             Height="34"/>
                                 </StackPanel>
                                 
                                 <StackPanel Grid.Column="1">
                                     <TextBlock Text="Password *" FontWeight="SemiBold" Margin="0,0,0,5"/>
-                                    <PasswordBox x:Name="PasswordBox"
-                                                PasswordChanged="PasswordBox_PasswordChanged"
-                                                Style="{StaticResource ModernPasswordBoxStyle}"
-                                                Height="34"/>
+                                    <TextBox x:Name="PasswordBox"
+                                             Text="{Binding Password, UpdateSourceTrigger=PropertyChanged}"
+                                             Classes="ModernPasswordBoxStyle"
+                                             PasswordChar="●"
+                                             Height="34"/>
                                 </StackPanel>
                             </Grid>
                         </StackPanel>
-                    </GroupBox>
+                    </StackPanel>
+                    </Border>
 
                     <!-- Ficheiro SAF-T -->
-                    <GroupBox Header="📁 Ficheiro SAF-T" Style="{StaticResource ModernGroupBoxStyle}" Margin="0,0,0,15">
+                    <Border Classes="ModernGroupBoxStyle" Margin="0,0,0,15">
+                        <StackPanel>
+                            <TextBlock Text="📁 Ficheiro SAF-T" FontWeight="Bold" Margin="0,0,0,10"/>
                         <StackPanel Margin="15">
                             <TextBlock Text="Ficheiro *" FontWeight="SemiBold" Margin="0,0,0,5"/>
                             <Grid>
@@ -150,11 +156,11 @@
                                 </Grid.ColumnDefinitions>
                                 <TextBox x:Name="FicheiroTextBox"
                                         Text="{Binding FicheiroSafT, UpdateSourceTrigger=PropertyChanged}"
-                                        Style="{StaticResource ModernTextBoxStyle}"
+                                        Classes="ModernTextBoxStyle"
                                         Height="38"
                                         Grid.Column="0"/>
                                 <Button Content="📂"
-                                       Style="{StaticResource ModernIconButtonStyle}"
+                                       Classes="ModernIconButtonStyle"
                                        Width="38"
                                        Height="38"
                                        Margin="8,0,0,0"
@@ -176,24 +182,28 @@
                                          VerticalAlignment="Center"/>
                             </StackPanel>
                         </StackPanel>
-                    </GroupBox>
+                    </StackPanel>
+                    </Border>
 
                     <!-- Opções Avançadas -->
-                    <GroupBox Header="⚙️ Opções Avançadas" Style="{StaticResource ModernGroupBoxStyle}">
+                    <Border Classes="ModernGroupBoxStyle">
+                        <StackPanel>
+                            <TextBlock Text="⚙️ Opções Avançadas" FontWeight="Bold" Margin="0,0,0,10"/>
                         <StackPanel Margin="15">
                             <!-- Password do Arquivo -->
                             <TextBlock Text="Password do Arquivo" FontWeight="SemiBold" Margin="0,0,0,5"/>
-                            <PasswordBox x:Name="ArquivoPasswordBox"
-                                        PasswordChanged="ArquivoPasswordBox_PasswordChanged"
-                                        Style="{StaticResource ModernPasswordBoxStyle}"
-                                        Height="34"
-                                        Margin="0,0,0,12"/>
+                            <TextBox x:Name="ArquivoPasswordBox"
+                                     Text="{Binding ArquivoPassword, UpdateSourceTrigger=PropertyChanged}"
+                                     Classes="ModernPasswordBoxStyle"
+                                     PasswordChar="●"
+                                     Height="34"
+                                     Margin="0,0,0,12"/>
 
                             <!-- NIF Emitente -->
                             <TextBlock Text="NIF Emitente" FontWeight="SemiBold" Margin="0,0,0,5"/>
                             <TextBox x:Name="NifEmitenteTextBox"
                                     Text="{Binding NifEmitente, UpdateSourceTrigger=PropertyChanged}"
-                                    Style="{StaticResource ModernTextBoxStyle}"
+                                    Classes="ModernTextBoxStyle"
                                     Height="34"
                                     Margin="0,0,0,12"/>
 
@@ -206,11 +216,11 @@
                                 </Grid.ColumnDefinitions>
                                 <TextBox x:Name="OutputTextBox"
                                         Text="{Binding OutputFile, UpdateSourceTrigger=PropertyChanged}"
-                                        Style="{StaticResource ModernTextBoxStyle}"
+                                        Classes="ModernTextBoxStyle"
                                         Height="34"
                                         Grid.Column="0"/>
                                 <Button Content="📂"
-                                       Style="{StaticResource ModernIconButtonStyle}"
+                                       Classes="ModernIconButtonStyle"
                                        Width="34"
                                        Height="34"
                                        Margin="8,0,0,0"
@@ -223,7 +233,7 @@
                             <TextBlock Text="Memória (ex: -Xmx512m)" FontWeight="SemiBold" Margin="0,0,0,5"/>
                             <TextBox x:Name="MemoriaTextBox"
                                     Text="{Binding Memoria, UpdateSourceTrigger=PropertyChanged}"
-                                    Style="{StaticResource ModernTextBoxStyle}"
+                                    Classes="ModernTextBoxStyle"
                                     Height="34"
                                     Margin="0,0,0,12"/>
 
@@ -231,10 +241,11 @@
                             <TextBlock Text="Etiquetas (separadas por vírgula)" FontWeight="SemiBold" Margin="0,0,0,5"/>
                             <TextBox x:Name="EtiquetasTextBox"
                                     Text="{Binding Etiquetas, UpdateSourceTrigger=PropertyChanged}"
-                                    Style="{StaticResource ModernTextBoxStyle}"
+                                    Classes="ModernTextBoxStyle"
                                     Height="34"/>
                         </StackPanel>
-                    </GroupBox>
+                    </StackPanel>
+                    </Border>
 
                 </StackPanel>
             </ScrollViewer>
@@ -262,7 +273,9 @@
                         </TabItem.Header>
                         <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,10,0,0">
                             <StackPanel>
-                                <GroupBox Header="🧪 Pré-verificações do ambiente" Style="{StaticResource ModernGroupBoxStyle}" Margin="0,0,0,12">
+                                <Border Classes="ModernGroupBoxStyle" Margin="0,0,0,12">
+                        <StackPanel>
+                            <TextBlock Text="🧪 Pré-verificações do ambiente" FontWeight="Bold" Margin="0,0,0,10"/>
                                     <StackPanel Margin="10">
                                         <TextBlock Text="{Binding PreflightStatusText}"
                                                   FontSize="14"
@@ -270,13 +283,13 @@
                                                   Foreground="#1976D2"
                                                   Margin="0,0,0,12"/>
 
-                                        <ListView x:Name="PreflightListView"
+                                        <ListBox x:Name="PreflightListView"
                                                  ItemsSource="{Binding PreflightChecks}"
                                                  BorderThickness="0"
                                                  Background="Transparent"
                                                  ScrollViewer.VerticalScrollBarVisibility="Disabled"
                                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                                            <ListView.ItemTemplate>
+                                            <ListBox.ItemTemplate>
                                                 <DataTemplate>
                                                     <Border Padding="10" Margin="0,0,0,8" Background="#F8F9FA" CornerRadius="4">
                                                         <StackPanel>
@@ -285,20 +298,23 @@
                                                         </StackPanel>
                                                     </Border>
                                                 </DataTemplate>
-                                            </ListView.ItemTemplate>
-                                        </ListView>
+                                            </ListBox.ItemTemplate>
+                                        </ListBox>
 
                                         <Button Content="🔄 Reexecutar"
-                                               Style="{StaticResource PrimaryButtonStyle}"
+                                               Classes="PrimaryButtonStyle"
                                                Width="140" 
                                                Height="36"
                                                HorizontalAlignment="Right"
                                                Margin="0,10,0,0"
                                                Command="{Binding RunPreflightCheckCommand}"/>
                                     </StackPanel>
-                                </GroupBox>
+                                </StackPanel>
+                    </Border>
 
-                                <GroupBox Header="🧾 Validação SAF-T (XSD oficial AT)" Style="{StaticResource ModernGroupBoxStyle}">
+                                <Border Classes="ModernGroupBoxStyle">
+                        <StackPanel>
+                            <TextBlock Text="🧾 Validação SAF-T (XSD oficial AT)" FontWeight="Bold" Margin="0,0,0,10"/>
                                     <StackPanel Margin="10">
                                         <TextBlock Text="Valide o ficheiro SAF-T selecionado de acordo com o XSD oficial publicado pela AT."
                                                    FontSize="13"
@@ -318,7 +334,7 @@
 
                                         <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                                             <Button Content="✅ Validar SAF-T"
-                                                   Style="{StaticResource PrimaryButtonStyle}"
+                                                   Classes="PrimaryButtonStyle"
                                                    Width="150"
                                                    Height="36"
                                                    IsEnabled="{Binding IsSaftValidationRunning, Converter={StaticResource InverseBooleanConverter}}"
@@ -343,27 +359,19 @@
                                         </ItemsControl>
 
                                         <Border Background="#F8F9FA" BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="6">
-                                            <ListView ItemsSource="{Binding SaftValidationIssues}"
+                                            <ListBox ItemsSource="{Binding SaftValidationIssues}"
                                                      BorderThickness="0"
                                                      Background="Transparent"
                                                      ScrollViewer.VerticalScrollBarVisibility="Auto"
                                                      MaxHeight="240">
-                                                <ListView.ItemTemplate>
+                                                <ListBox.ItemTemplate>
                                                     <DataTemplate>
                                                         <Border Padding="10" Margin="0,0,0,8" Background="White" CornerRadius="4" BorderBrush="#E0E0E0" BorderThickness="1">
                                                             <StackPanel>
-                                                                <TextBlock Text="{Binding Resumo}" TextWrapping="Wrap" FontWeight="SemiBold">
-                                                                    <TextBlock.Style>
-                                                                        <Style TargetType="TextBlock">
-                                                                            <Setter Property="Foreground" Value="#C62828"/>
-                                                                            <Style.Triggers>
-                                                                                <DataTrigger Binding="{Binding Severidade}" Value="Aviso">
-                                                                                    <Setter Property="Foreground" Value="#F57C00"/>
-                                                                                </DataTrigger>
-                                                                            </Style.Triggers>
-                                                                        </Style>
-                                                                    </TextBlock.Style>
-                                                                </TextBlock>
+                                                                <TextBlock Text="{Binding Resumo}"
+                                                                           TextWrapping="Wrap"
+                                                                           FontWeight="SemiBold"
+                                                                           Foreground="{Binding Severidade, Converter={StaticResource SaftSeverityToColorConverter}}"/>
                                                                 <TextBlock Text="{Binding Sugestao}"
                                                                           Margin="0,4,0,0"
                                                                           TextWrapping="Wrap"
@@ -371,11 +379,12 @@
                                                             </StackPanel>
                                                         </Border>
                                                     </DataTemplate>
-                                                </ListView.ItemTemplate>
-                                            </ListView>
+                                                </ListBox.ItemTemplate>
+                                            </ListBox>
                                         </Border>
                                     </StackPanel>
-                                </GroupBox>
+                                </StackPanel>
+                    </Border>
                             </StackPanel>
                         </ScrollViewer>
                     </TabItem>
@@ -468,19 +477,19 @@
                             <UniformGrid Grid.Row="2" Columns="3" Margin="0,10,0,0">
                                 <Button x:Name="CopiarResultadoButton"
                                        Content="📋 Copiar"
-                                       Style="{StaticResource SecondaryButtonStyle}"
+                                       Classes="SecondaryButtonStyle"
                                        Command="{Binding CopiarResultadoCommand}"
                                        Margin="0,0,5,0"
                                        Height="38"/>
                                 <Button x:Name="AbrirLogButton"
                                        Content="📄 Abrir Log"
-                                       Style="{StaticResource SecondaryButtonStyle}"
+                                       Classes="SecondaryButtonStyle"
                                        Command="{Binding AbrirUltimoLogCommand}"
                                        Margin="0,0,5,0"
                                        Height="38"/>
                                 <Button x:Name="LimparResultadoButton"
                                        Content="🗑️ Limpar"
-                                       Style="{StaticResource SecondaryButtonStyle}"
+                                       Classes="SecondaryButtonStyle"
                                        Command="{Binding LimparResultadoCommand}"
                                        Height="38"/>
                             </UniformGrid>
@@ -528,12 +537,12 @@
 
                             <UniformGrid Grid.Row="2" Columns="2">
                                 <Button Content="📥 Exportar CSV"
-                                       Style="{StaticResource SecondaryButtonStyle}"
+                                       Classes="SecondaryButtonStyle"
                                        Command="{Binding ExportarHistoricoCommand}"
                                        Margin="0,0,5,0"
                                        Height="38"/>
                                 <Button Content="🔄 Limpar Filtros"
-                                       Style="{StaticResource SecondaryButtonStyle}"
+                                       Classes="SecondaryButtonStyle"
                                        Command="{Binding LimparFiltrosHistoricoCommand}"
                                        Height="38"/>
                             </UniformGrid>
@@ -560,9 +569,7 @@
                                           Margin="0,0,0,20"/>
                                 
                                 <TextBlock HorizontalAlignment="Center">
-                                    <Hyperlink NavigateUri="https://loadinghappiness.com" RequestNavigate="Hyperlink_RequestNavigate">
-                                        loadinghappiness.com
-                                    </Hyperlink>
+                                    <Button Classes="SecondaryButtonStyle" Content="loadinghappiness.com" Tag="https://loadinghappiness.com" Click="Hyperlink_Click"/>
                                 </TextBlock>
                             </StackPanel>
                         </ScrollViewer>

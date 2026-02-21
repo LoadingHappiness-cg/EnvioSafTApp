@@ -23,6 +23,7 @@ namespace EnvioSafTApp.ViewModels
         private readonly IPreflightCheckService _preflightCheckService;
         private readonly IHistoricoEnviosService _historicoEnviosService;
         private readonly ISaftValidationService _saftValidationService;
+        private readonly IClipboardService _clipboardService;
 
         [ObservableProperty]
         private string _appVersion = "1.0.0";
@@ -189,12 +190,14 @@ namespace EnvioSafTApp.ViewModels
             IPreflightCheckService preflightCheckService,
             IHistoricoEnviosService historicoEnviosService,
             ISaftValidationService saftValidationService,
+            IClipboardService clipboardService,
             IFileService fileService)
         {
             _jarUpdateService = jarUpdateService;
             _preflightCheckService = preflightCheckService;
             _historicoEnviosService = historicoEnviosService;
             _saftValidationService = saftValidationService;
+            _clipboardService = clipboardService;
             _fileService = fileService;
             
             AppVersion = $"v{GetVersion()} – loadinghappiness.com";
@@ -679,17 +682,16 @@ namespace EnvioSafTApp.ViewModels
         }
 
         [RelayCommand]
-        private void CopiarResultado()
+        private async Task CopiarResultadoAsync()
         {
             if (!string.IsNullOrWhiteSpace(OutputText))
             {
-                // Clipboard is UI thread specific. 
-                // In pure MVVM, we should use a service.
-                // But for now, we can use System.Windows.Clipboard if we are in WPF project.
-                // Or pass it as a service.
-                // Since this is a WPF app, referencing PresentationCore is fine.
-                System.Windows.Clipboard.SetText(OutputText);
-                ShowTicker("Resultado copiado para a área de transferência.", TickerMessageType.Success);
+                var copied = await _clipboardService.SetTextAsync(OutputText, CancellationToken.None);
+                ShowTicker(
+                    copied
+                        ? "Resultado copiado para a área de transferência."
+                        : "Não foi possível copiar o resultado para a área de transferência.",
+                    copied ? TickerMessageType.Success : TickerMessageType.Warning);
             }
         }
 

@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
-using System.Windows;
 using EnvioSafTApp.Models;
 using EnvioSafTApp.Services.Interfaces;
 
@@ -54,7 +53,6 @@ namespace EnvioSafTApp.Services
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Erro ao gravar histórico: {ex.Message}");
-                MessageBox.Show($"Erro ao gravar histórico: {ex.Message}", "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Serialization;
-using System.Windows.Media;
+using Avalonia.Media;
 
 namespace EnvioSafTApp.Models
 {
@@ -33,7 +33,7 @@ namespace EnvioSafTApp.Models
         };
 
         [JsonIgnore]
-        public Brush ResultadoCor => Resultado switch
+        public IBrush ResultadoCor => Resultado switch
         {
             "sucesso" => Brushes.Green,
             "erro" => Brushes.Red,
