@@ -26,7 +26,7 @@
             <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="12">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="12">
                     <Border Classes="BrandMarkWrap" Padding="10,6">
-                        <Image Source="avares://EnvioSafTApp/EnviaSaft.png" Height="38"/>
+                        <Image Source="avares://EnvioSafTApp/Assets/EnviaSaft-v2.png" Height="38"/>
                     </Border>
                     <StackPanel Spacing="2" VerticalAlignment="Center">
                         <TextBlock Text="Envio SAF-T AT" Classes="TopTitleText"/>
@@ -310,7 +310,7 @@
                     <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20">
                         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10">
                             <Border Classes="BrandMarkWrap" Padding="12,8">
-                                <Image Source="avares://EnvioSafTApp/EnviaSaft.png" Height="72"/>
+                                <Image Source="avares://EnvioSafTApp/Assets/EnviaSaft-v2.png" Height="72"/>
                             </Border>
                             <TextBlock Text="EnvioSafT AT" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center"/>
                             <TextBlock Text="{Binding AppVersion}" FontSize="14" HorizontalAlignment="Center" Classes="MutedText" Margin="0,0,0,10"/>

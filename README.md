@@ -76,6 +76,32 @@ Para abrir no Finder/terminal:
 open dist/macos/EnvioSafTApp.app
 ```
 
+## 🪟 Build Windows (`.exe` e setup)
+
+Para gerar o `publish` Windows (self-contained, sem dependência do runtime instalado):
+
+```bash
+scripts/build-windows-publish.sh
+```
+
+Saída:
+
+```text
+dist/windows/publish
+```
+
+Para gerar o instalador (`.exe`) no Windows com Inno Setup 6:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\build-windows-installer.ps1
+```
+
+Saída:
+
+```text
+dist/windows/installer/EnviaSaftSetup_v2.0.0.exe
+```
+
 ---
 
 ## 🆓 Licença

@@ -1,52 +1,43 @@
 ; Inno Setup Script - EnviaSaft Installer
 
+#define MyAppName "EnviaSaft"
+#define MyAppVersion "2.0.0"
+#define MyAppPublisher "Loading Happiness"
+#define MyAppExeName "EnvioSafTApp.exe"
+#define MyAppPublishDir "dist\\windows\\publish"
+
 [Setup]
-AppName=EnviaSaft
-AppVersion=2.0.0
-DefaultDirName={autopf}\EnviaSaft
-DefaultGroupName=EnviaSaft
-OutputDir=.\Output
-OutputBaseFilename=EnviaSaftSetup_v2.0.0
-Compression=lzma
+AppId={{5F4EBF8B-8F57-4608-9D30-2F5E3CF0A84E}
+AppName={#MyAppName}
+AppVersion={#MyAppVersion}
+AppVerName={#MyAppName} {#MyAppVersion}
+AppPublisher={#MyAppPublisher}
+DefaultDirName={autopf}\{#MyAppName}
+DefaultGroupName={#MyAppName}
+OutputDir=dist\windows\installer
+OutputBaseFilename=EnviaSaftSetup_v{#MyAppVersion}
+Compression=lzma2
 SolidCompression=yes
-ArchitecturesInstallIn64BitMode=x64
+ArchitecturesAllowed=x64compatible
+ArchitecturesInstallIn64BitMode=x64compatible
+WizardStyle=modern
 PrivilegesRequired=admin
 PrivilegesRequiredOverridesAllowed=dialog
-SetupIconFile="C:\Deploy\EnviaSaftFinal\icon.ico"
+SetupIconFile=Assets\EnviaSaft.ico
+UninstallDisplayIcon={app}\Assets\EnviaSaft.ico
 
 [Languages]
 Name: "pt"; MessagesFile: "compiler:Languages\Portuguese.isl"
 
-[Files]
-; App executável principal
-Source: "C:\Deploy\EnviaSaftFinal\EnvioSaftApp.exe"; DestDir: "{app}"; Flags: ignoreversion
-; Dependências (dll, json, etc.)
-Source: "C:\Deploy\EnviaSaftFinal\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs
+[Tasks]
+Name: "desktopicon"; Description: "Criar Ã­cone no ambiente de trabalho"; GroupDescription: "OpÃ§Ãµes adicionais"
 
-; Runtime offline do .NET 8
-Source: "C:\Deploy\EnviaSaftFinal\external\windowsdesktop-runtime-8.0.16-win-x64.exe"; DestDir: "{tmp}"; Flags: deleteafterinstall
+[Files]
+Source: "{#MyAppPublishDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{group}\EnviaSaft"; Filename: "{app}\EnvioSaftApp.exe"
-Name: "{commondesktop}\EnviaSaft"; Filename: "{app}\EnvioSaftApp.exe"; Tasks: desktopicon
-
-[Tasks]
-Name: "desktopicon"; Description: "Criar ícone no ambiente de trabalho"; GroupDescription: "Opções adicionais"
+Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
+Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 
 [Run]
-; Instalar .NET Runtime apenas se necessário
-Filename: "{tmp}\windowsdesktop-runtime-8.0.16-win-x64.exe"; \
-    Parameters: "/install /quiet /norestart"; \
-    StatusMsg: "A instalar .NET Desktop Runtime 8.0..."; \
-    Flags: waituntilterminated runhidden; \
-    Check: NeedsDotNetDesktop80
-
-; Executar a app após instalação
-Filename: "{app}\EnvioSaftApp.exe"; Description: "Iniciar EnviaSaft"; Flags: nowait postinstall skipifsilent
-
-[Code]
-function NeedsDotNetDesktop80(): Boolean;
-begin
-  Result := not RegKeyExists(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Microsoft .NET Runtime - 8.0.0 (x64)')
-         and not RegKeyExists(HKLM64, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Microsoft .NET Runtime - 8.0.0 (x64)');
-end;
+Filename: "{app}\{#MyAppExeName}"; Description: "Iniciar {#MyAppName}"; Flags: nowait postinstall skipifsilent

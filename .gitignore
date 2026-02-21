@@ -29,6 +29,7 @@ TestResults/
 # Rider
 .idea/
 *.sln.iml
+.DS_Store
 
 # Pacotes NuGet
 packages/
