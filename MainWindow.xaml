@@ -7,6 +7,7 @@
         MinHeight="750">
     <Window.Resources>
         <converters:TickerTypeToColorConverter x:Key="TickerTypeToColorConverter"/>
+        <converters:TickerTypeToIconConverter x:Key="TickerTypeToIconConverter"/>
         <converters:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
         <converters:SaftSeverityToColorConverter x:Key="SaftSeverityToColorConverter"/>
     </Window.Resources>
@@ -571,7 +572,7 @@
             <Grid>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock x:Name="StatusTickerIcon" 
-                              Text="i" 
+                              Text="{Binding TickerType, Converter={StaticResource TickerTypeToIconConverter}}" 
                               FontSize="16" 
                               Foreground="White" 
                               Margin="0,0,10,0"

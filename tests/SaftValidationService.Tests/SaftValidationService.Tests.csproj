@@ -21,8 +21,11 @@
 
   <ItemGroup>
     <Compile Include="../../Services/SaftValidationService.cs" Link="Source/Services/SaftValidationService.cs" />
+    <Compile Include="../../Services/JarUpdateService.cs" Link="Source/Services/JarUpdateService.cs" />
     <Compile Include="../../Services/Interfaces/ISaftValidationService.cs" Link="Source/Services/Interfaces/ISaftValidationService.cs" />
+    <Compile Include="../../Services/Interfaces/IJarUpdateService.cs" Link="Source/Services/Interfaces/IJarUpdateService.cs" />
     <Compile Include="../../Models/SaftValidationIssue.cs" Link="Source/Models/SaftValidationIssue.cs" />
+    <Compile Include="../../Models/JarUpdateResult.cs" Link="Source/Models/JarUpdateResult.cs" />
     <Compile Include="../../Models/SaftValidationResult.cs" Link="Source/Models/SaftValidationResult.cs" />
   </ItemGroup>
 </Project>

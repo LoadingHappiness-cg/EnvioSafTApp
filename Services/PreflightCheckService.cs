@@ -28,7 +28,7 @@ namespace EnvioSafTApp.Services
             var checks = new List<PreflightCheckResult>
             {
                 await VerificarJavaAsync(),
-                await Task.Run(VerificarJar),
+                await VerificarJarAsync(),
                 await Task.Run(VerificarPermissoesEscrita)
             };
 
@@ -87,13 +87,21 @@ namespace EnvioSafTApp.Services
             return resultado;
         }
 
-        private PreflightCheckResult VerificarJar()
+        private async Task<PreflightCheckResult> VerificarJarAsync()
         {
             try
             {
                 string jarPath = _jarUpdateService.GetLocalJarPath();
                 bool existe = File.Exists(jarPath);
                 string fileName = Path.GetFileName(jarPath);
+
+                if (!existe)
+                {
+                    var ensureResult = await _jarUpdateService.EnsureLatestAsync(CancellationToken.None);
+                    jarPath = ensureResult.JarPath;
+                    existe = ensureResult.Success && File.Exists(jarPath);
+                    fileName = Path.GetFileName(jarPath);
+                }
 
                 return new PreflightCheckResult
                 {

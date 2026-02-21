@@ -20,11 +20,24 @@ namespace EnvioSafTApp.Services
         private const string MetadataFileName = "EnviaSaft.jar.metadata.json";
         private static readonly Uri JarDownloadUri = new Uri("https://www.portaldasfinancas.gov.pt/static/docs/factemi/EnviaSaft.jar");
         private readonly HttpClient _httpClient;
+        private readonly string _userLibsFolder;
+        private readonly string _bundleLibsFolder;
         private static readonly Regex JarExecutionRegex = new Regex(@"java\s+-jar\s+(?:(['""])(?<path>[^'""]+)\1|(?<path>[^\s]+))", RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
         public JarUpdateService()
+            : this(userLibsFolder: null, bundleLibsFolder: null, httpClient: null)
         {
-            _httpClient = CreateClient();
+        }
+
+        public JarUpdateService(string? userLibsFolder, string? bundleLibsFolder, HttpClient? httpClient)
+        {
+            _httpClient = httpClient ?? CreateClient();
+            _userLibsFolder = string.IsNullOrWhiteSpace(userLibsFolder)
+                ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "EnviaSaft", "libs")
+                : userLibsFolder;
+            _bundleLibsFolder = string.IsNullOrWhiteSpace(bundleLibsFolder)
+                ? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "libs")
+                : bundleLibsFolder;
         }
 
         private static HttpClient CreateClient()
@@ -33,19 +46,28 @@ namespace EnvioSafTApp.Services
             {
                 Timeout = TimeSpan.FromSeconds(120)
             };
-            client.DefaultRequestHeaders.UserAgent.ParseAdd("EnvioSaftApp/1.0");
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) EnvioSaftApp/2.0");
+            client.DefaultRequestHeaders.Accept.ParseAdd("*/*");
             return client;
         }
 
         public async Task<JarUpdateResult> EnsureLatestAsync(CancellationToken cancellationToken)
         {
-            string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            string libsFolder = Path.Combine(baseDirectory, "libs");
+            string libsFolder = GetUserLibsFolder();
             Directory.CreateDirectory(libsFolder);
 
             string metadataPath = Path.Combine(libsFolder, MetadataFileName);
             JarMetadata? metadata = await LoadMetadataAsync(metadataPath, cancellationToken);
             string jarPath = ResolveExistingJarPath(libsFolder, metadata);
+
+            if (!File.Exists(jarPath))
+            {
+                var seededJar = await TrySeedFromBundleAsync(libsFolder, metadataPath, cancellationToken);
+                if (!string.IsNullOrWhiteSpace(seededJar))
+                {
+                    jarPath = seededJar;
+                }
+            }
 
             if (File.Exists(jarPath))
             {
@@ -318,7 +340,7 @@ namespace EnvioSafTApp.Services
                 return (null, false);
             }
 
-            string libsFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "libs");
+            string libsFolder = GetUserLibsFolder();
             Directory.CreateDirectory(libsFolder);
 
             cancellationToken.ThrowIfCancellationRequested();
@@ -439,15 +461,75 @@ namespace EnvioSafTApp.Services
 
         public string GetLocalJarPath()
         {
-            string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            string libsFolder = Path.Combine(baseDirectory, "libs");
+            string libsFolder = GetUserLibsFolder();
             Directory.CreateDirectory(libsFolder);
 
             string metadataPath = Path.Combine(libsFolder, MetadataFileName);
             JarMetadata? metadata = LoadMetadata(metadataPath);
 
             string jarPath = ResolveExistingJarPath(libsFolder, metadata);
+            if (File.Exists(jarPath))
+            {
+                return jarPath;
+            }
+
+            // Fallback para o .jar empacotado junto da app.
+            string bundleJar = ResolveExistingJarPath(GetBundleLibsFolder(), null);
+            if (File.Exists(bundleJar))
+            {
+                return bundleJar;
+            }
+
             return jarPath;
+        }
+
+        private string GetUserLibsFolder() => _userLibsFolder;
+
+        private string GetBundleLibsFolder() => _bundleLibsFolder;
+
+        private async Task<string?> TrySeedFromBundleAsync(string targetLibsFolder, string metadataPath, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var bundleLibs = GetBundleLibsFolder();
+                if (!Directory.Exists(bundleLibs))
+                {
+                    return null;
+                }
+
+                var sourceJar = Directory.EnumerateFiles(bundleLibs, "*.jar")
+                    .OrderBy(f => f)
+                    .FirstOrDefault();
+
+                if (string.IsNullOrWhiteSpace(sourceJar) || !File.Exists(sourceJar))
+                {
+                    return null;
+                }
+
+                var fileName = Path.GetFileName(sourceJar);
+                if (string.IsNullOrWhiteSpace(fileName))
+                {
+                    return null;
+                }
+
+                var destinationJar = Path.Combine(targetLibsFolder, fileName);
+                if (!PathsAreSame(sourceJar, destinationJar))
+                {
+                    File.Copy(sourceJar, destinationJar, overwrite: true);
+                }
+
+                var metadata = new JarMetadata
+                {
+                    FileName = fileName,
+                    LastModified = GetFileLastWriteTimeUtc(destinationJar)
+                };
+                await SaveMetadataAsync(metadataPath, metadata, cancellationToken);
+                return destinationJar;
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         private static JarMetadata? LoadMetadata(string metadataPath)
