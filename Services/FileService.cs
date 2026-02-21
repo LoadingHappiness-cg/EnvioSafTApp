@@ -12,13 +12,7 @@ namespace EnvioSafTApp.Services
 {
     public class FileService : IFileService
     {
-        public string? OpenFileDialog(string filter)
-            => OpenFileDialogAsync(filter).GetAwaiter().GetResult();
-
-        public string? SaveFileDialog(string filter, string defaultExt)
-            => SaveFileDialogAsync(filter, defaultExt).GetAwaiter().GetResult();
-
-        private static async Task<string?> OpenFileDialogAsync(string filter)
+        public async Task<string?> OpenFileDialogAsync(string filter)
         {
             var window = GetMainWindow();
             if (window?.StorageProvider == null)
@@ -35,7 +29,7 @@ namespace EnvioSafTApp.Services
             return files.FirstOrDefault()?.TryGetLocalPath();
         }
 
-        private static async Task<string?> SaveFileDialogAsync(string filter, string defaultExt)
+        public async Task<string?> SaveFileDialogAsync(string filter, string defaultExt)
         {
             var window = GetMainWindow();
             if (window?.StorageProvider == null)

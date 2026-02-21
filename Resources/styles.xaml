@@ -7,11 +7,13 @@
     </Design.PreviewWith>
 
     <Styles.Resources>
-        <SolidColorBrush x:Key="PrimaryColorBrush" Color="#0078D7"/>
-        <SolidColorBrush x:Key="PrimaryHoverBrush" Color="#0063B1"/>
+        <SolidColorBrush x:Key="PrimaryColorBrush" Color="#0A84FF"/>
+        <SolidColorBrush x:Key="PrimaryHoverBrush" Color="#0066CC"/>
         <SolidColorBrush x:Key="PrimaryForegroundBrush" Color="White"/>
-        <SolidColorBrush x:Key="TextBoxBorderBrush" Color="#CCC"/>
-        <SolidColorBrush x:Key="TextBoxFocusBorderBrush" Color="#0078D7"/>
+        <SolidColorBrush x:Key="TextBoxBorderBrush" Color="#CDD4DF"/>
+        <SolidColorBrush x:Key="TextBoxFocusBorderBrush" Color="#0A84FF"/>
+        <SolidColorBrush x:Key="CardBorderBrush" Color="#D8DEE8"/>
+        <SolidColorBrush x:Key="CardBackgroundBrush" Color="#FFFFFF"/>
     </Styles.Resources>
 
     <!-- Botão Primário -->
@@ -19,10 +21,11 @@
         <Setter Property="Background" Value="{StaticResource PrimaryColorBrush}"/>
         <Setter Property="Foreground" Value="{StaticResource PrimaryForegroundBrush}"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
-        <Setter Property="Padding" Value="10,5"/>
+        <Setter Property="Padding" Value="14,8"/>
         <Setter Property="BorderThickness" Value="0"/>
-        <Setter Property="CornerRadius" Value="4"/>
+        <Setter Property="CornerRadius" Value="10"/>
         <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="FontSize" Value="14"/>
         <Setter Property="HorizontalContentAlignment" Value="Center"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
     </Style>
@@ -32,22 +35,22 @@
 
     <!-- Botão ModernSendButtonStyle -->
     <Style Selector="Button.ModernSendButtonStyle">
-        <Setter Property="Height" Value="56"/>
+        <Setter Property="Height" Value="54"/>
         <Setter Property="MinWidth" Value="220"/>
-        <Setter Property="FontSize" Value="16"/>
+        <Setter Property="FontSize" Value="15"/>
         <Setter Property="FontWeight" Value="Bold"/>
-        <Setter Property="Padding" Value="20,8"/>
+        <Setter Property="Padding" Value="24,8"/>
         <Setter Property="Background">
             <Setter.Value>
                 <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                    <GradientStop Color="#FF4FA3E6" Offset="0"/>
-                    <GradientStop Color="#FF1976D2" Offset="1"/>
+                    <GradientStop Color="#2CA8FF" Offset="0"/>
+                    <GradientStop Color="#0A84FF" Offset="1"/>
                 </LinearGradientBrush>
             </Setter.Value>
         </Setter>
         <Setter Property="Foreground" Value="White"/>
         <Setter Property="BorderThickness" Value="0"/>
-        <Setter Property="CornerRadius" Value="12"/>
+        <Setter Property="CornerRadius" Value="14"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="HorizontalContentAlignment" Value="Center"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
@@ -67,8 +70,8 @@
         <Setter Property="Background">
             <Setter.Value>
                 <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                    <GradientStop Color="#FF4FA3E6" Offset="0"/>
-                    <GradientStop Color="#FF1976D2" Offset="1"/>
+                    <GradientStop Color="#53B7FF" Offset="0"/>
+                    <GradientStop Color="#0A84FF" Offset="1"/>
                 </LinearGradientBrush>
             </Setter.Value>
         </Setter>
@@ -78,12 +81,12 @@
     <!-- Botão Secundário -->
     <Style Selector="Button.SecondaryButtonStyle">
         <Setter Property="Background" Value="White"/>
-        <Setter Property="Foreground" Value="#1E88E5"/>
-        <Setter Property="BorderBrush" Value="#1E88E5"/>
+        <Setter Property="Foreground" Value="#0A84FF"/>
+        <Setter Property="BorderBrush" Value="#0A84FF"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
-        <Setter Property="Padding" Value="10,5"/>
-        <Setter Property="CornerRadius" Value="4"/>
+        <Setter Property="Padding" Value="12,7"/>
+        <Setter Property="CornerRadius" Value="10"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="HorizontalContentAlignment" Value="Center"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
@@ -97,14 +100,14 @@
 
     <!-- Botão ModernIconButtonStyle -->
     <Style Selector="Button.ModernIconButtonStyle">
-        <Setter Property="Background" Value="#0078D7"/>
+        <Setter Property="Background" Value="#0A84FF"/>
         <Setter Property="Foreground" Value="White"/>
         <Setter Property="FontWeight" Value="Bold"/>
-        <Setter Property="BorderBrush" Value="#0078D7"/>
+        <Setter Property="BorderBrush" Value="#0A84FF"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Padding" Value="0"/>
         <Setter Property="Margin" Value="0"/>
-        <Setter Property="CornerRadius" Value="4"/>
+        <Setter Property="CornerRadius" Value="10"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="HorizontalAlignment" Value="Center"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
@@ -114,13 +117,13 @@
 
     <!-- TextBox -->
     <Style Selector="TextBox.ModernTextBoxStyle">
-        <Setter Property="Margin" Value="0,0,0,6"/>
-        <Setter Property="Padding" Value="4"/>
+        <Setter Property="Margin" Value="0,0,0,8"/>
+        <Setter Property="Padding" Value="10,6"/>
         <Setter Property="BorderBrush" Value="{StaticResource TextBoxBorderBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontSize" Value="14"/>
         <Setter Property="Background" Value="White"/>
-        <Setter Property="CornerRadius" Value="3"/>
+        <Setter Property="CornerRadius" Value="9"/>
     </Style>
     <Style Selector="TextBox.ModernTextBoxStyle:focus /template/ Border#PART_BorderElement">
         <Setter Property="BorderBrush" Value="{StaticResource TextBoxFocusBorderBrush}"/>
@@ -129,13 +132,13 @@
     <!-- PasswordBox -->
     <Style Selector="TextBox.ModernPasswordBoxStyle">
         <Setter Property="PasswordChar" Value="●"/>
-        <Setter Property="Margin" Value="0,0,0,6"/>
-        <Setter Property="Padding" Value="4"/>
+        <Setter Property="Margin" Value="0,0,0,8"/>
+        <Setter Property="Padding" Value="10,6"/>
         <Setter Property="BorderBrush" Value="{StaticResource TextBoxBorderBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontSize" Value="14"/>
         <Setter Property="Background" Value="White"/>
-        <Setter Property="CornerRadius" Value="3"/>
+        <Setter Property="CornerRadius" Value="9"/>
     </Style>
     <Style Selector="TextBox.ModernPasswordBoxStyle:focus /template/ Border#PART_BorderElement">
         <Setter Property="BorderBrush" Value="{StaticResource TextBoxFocusBorderBrush}"/>
@@ -143,22 +146,48 @@
 
     <!-- ComboBox -->
     <Style Selector="ComboBox.ModernComboBoxStyle">
-        <Setter Property="Margin" Value="0,0,0,6"/>
-        <Setter Property="FontSize" Value="13"/>
-        <Setter Property="Padding" Value="4"/>
+        <Setter Property="Margin" Value="0,0,0,8"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="Padding" Value="10,6"/>
         <Setter Property="BorderBrush" Value="{StaticResource TextBoxBorderBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Background" Value="White"/>
+        <Setter Property="CornerRadius" Value="9"/>
     </Style>
 
     <!-- GroupBox using avalonia's HeaderedContentControl or experimental border -->
     <Style Selector="Border.ModernGroupBoxStyle">
-        <Setter Property="Margin" Value="0,0,0,10"/>
-        <Setter Property="Padding" Value="6"/>
-        <Setter Property="BorderBrush" Value="#DDD"/>
+        <Setter Property="Margin" Value="0,0,0,12"/>
+        <Setter Property="Padding" Value="12"/>
+        <Setter Property="BorderBrush" Value="{StaticResource CardBorderBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="Background" Value="White"/>
-        <Setter Property="CornerRadius" Value="4"/>
+        <Setter Property="Background" Value="{StaticResource CardBackgroundBrush}"/>
+        <Setter Property="CornerRadius" Value="12"/>
+    </Style>
+
+    <Style Selector="TabControl#RightTabControl">
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="Padding" Value="2"/>
+    </Style>
+
+    <Style Selector="TabControl#RightTabControl TabItem">
+        <Setter Property="Margin" Value="0,0,0,6"/>
+        <Setter Property="Padding" Value="12,10"/>
+        <Setter Property="Foreground" Value="#4A5568"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="CornerRadius" Value="10"/>
+        <Setter Property="HorizontalAlignment" Value="Stretch"/>
+    </Style>
+
+    <Style Selector="TabControl#RightTabControl TabItem:pointerover">
+        <Setter Property="Background" Value="#F1F6FD"/>
+        <Setter Property="Foreground" Value="#2D3748"/>
+    </Style>
+
+    <Style Selector="TabControl#RightTabControl TabItem:selected">
+        <Setter Property="Background" Value="#E6F1FF"/>
+        <Setter Property="Foreground" Value="#0A84FF"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
     </Style>
 
     <!-- TextBlock -->

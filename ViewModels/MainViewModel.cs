@@ -206,7 +206,7 @@ namespace EnvioSafTApp.ViewModels
         [RelayCommand]
         private async Task BrowseFileAsync()
         {
-            var filePath = _fileService.OpenFileDialog("Ficheiros SAF-T (*.xml, *.zip, *.gz, *.tar, *.rar)|*.xml;*.zip;*.gz;*.tar;*.rar");
+            var filePath = await _fileService.OpenFileDialogAsync("Ficheiros SAF-T (*.xml, *.zip, *.gz, *.tar, *.rar)|*.xml;*.zip;*.gz;*.tar;*.rar");
             if (!string.IsNullOrWhiteSpace(filePath))
             {
                 try
@@ -303,9 +303,9 @@ namespace EnvioSafTApp.ViewModels
         }
 
         [RelayCommand]
-        private void BrowseOutputFile()
+        private async Task BrowseOutputFileAsync()
         {
-            var filePath = _fileService.SaveFileDialog("Ficheiro XML (*.xml)|*.xml", ".xml");
+            var filePath = await _fileService.SaveFileDialogAsync("Ficheiro XML (*.xml)|*.xml", ".xml");
             if (!string.IsNullOrWhiteSpace(filePath))
             {
                 OutputFile = filePath;
@@ -830,7 +830,7 @@ namespace EnvioSafTApp.ViewModels
         }
 
         [RelayCommand]
-        private void ExportarHistorico()
+        private async Task ExportarHistoricoAsync()
         {
             if (!HistoricoFiltrado.Any())
             {
@@ -838,7 +838,7 @@ namespace EnvioSafTApp.ViewModels
                 return;
             }
 
-            var filePath = _fileService.SaveFileDialog("Ficheiro CSV (*.csv)|*.csv", ".csv");
+            var filePath = await _fileService.SaveFileDialogAsync("Ficheiro CSV (*.csv)|*.csv", ".csv");
             if (!string.IsNullOrWhiteSpace(filePath))
             {
                 try

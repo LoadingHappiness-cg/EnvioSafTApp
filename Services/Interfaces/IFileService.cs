@@ -2,7 +2,7 @@ namespace EnvioSafTApp.Services.Interfaces
 {
     public interface IFileService
     {
-        string? OpenFileDialog(string filter);
-        string? SaveFileDialog(string filter, string defaultExt);
+        Task<string?> OpenFileDialogAsync(string filter);
+        Task<string?> SaveFileDialogAsync(string filter, string defaultExt);
     }
 }

@@ -11,19 +11,19 @@
         <converters:SaftSeverityToColorConverter x:Key="SaftSeverityToColorConverter"/>
     </Window.Resources>
 
-    <Grid Background="#F5F7FA">
+    <Grid Background="#F1F4F9">
         <Grid.RowDefinitions>
-            <RowDefinition Height="88"/>
+            <RowDefinition Height="96"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="40"/>
         </Grid.RowDefinitions>
 
         <!-- Cabeçalho -->
-        <Border Grid.Row="0" Padding="20,12" CornerRadius="0,0,14,14" >
+        <Border Grid.Row="0" Padding="24,14" CornerRadius="0,0,14,14" >
             <Border.Background>
                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                    <GradientStop Color="#FF4FA3E6" Offset="0"/>
-                    <GradientStop Color="#FF6BC8F4" Offset="1"/>
+                    <GradientStop Color="#31B7E8" Offset="0"/>
+                    <GradientStop Color="#4EC6EA" Offset="1"/>
                 </LinearGradientBrush>
             </Border.Background>
             <Grid>
@@ -34,7 +34,7 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <Border Background="#1AFFFFFF" Padding="10" CornerRadius="12" Margin="0,0,10,0">
+                    <Border Background="#1AFFFFFF" Padding="10" CornerRadius="12" Margin="0,0,12,0">
                         <Image x:Name="Logo" Source="avares://EnvioSafTApp/EnviaSaft.png" Height="42"/>
                     </Border>
                     <StackPanel VerticalAlignment="Center">
@@ -51,7 +51,7 @@
                         VerticalAlignment="Center"
                         IsEnabled="{Binding IsSending, Converter={StaticResource InverseBooleanConverter}}"/>
 
-                <Border Grid.Column="3" Background="#26FFFFFF" Padding="12,8" CornerRadius="12" VerticalAlignment="Center">
+                <Border Grid.Column="3" Background="#29FFFFFF" Padding="14,9" CornerRadius="12" VerticalAlignment="Center">
                     <TextBlock Text="{Binding AppVersion}"
                                Foreground="White"
                                FontSize="12"
@@ -76,7 +76,7 @@
                     <!-- Dados do Envio -->
                     <Border Classes="ModernGroupBoxStyle" Margin="0,0,0,15">
                         <StackPanel>
-                            <TextBlock Text="📋 Dados do Envio" FontWeight="Bold" Margin="0,0,0,10"/>
+                            <TextBlock Text="Dados do Envio" FontWeight="Bold" Margin="0,0,0,10"/>
                         <StackPanel Margin="15">
                             <!-- Ano, Mês, Operação -->
                             <Grid Margin="0,0,0,15">
@@ -146,7 +146,7 @@
                     <!-- Ficheiro SAF-T -->
                     <Border Classes="ModernGroupBoxStyle" Margin="0,0,0,15">
                         <StackPanel>
-                            <TextBlock Text="📁 Ficheiro SAF-T" FontWeight="Bold" Margin="0,0,0,10"/>
+                            <TextBlock Text="Ficheiro SAF-T" FontWeight="Bold" Margin="0,0,0,10"/>
                         <StackPanel Margin="15">
                             <TextBlock Text="Ficheiro *" FontWeight="SemiBold" Margin="0,0,0,5"/>
                             <Grid>
@@ -159,7 +159,7 @@
                                         Classes="ModernTextBoxStyle"
                                         Height="38"
                                         Grid.Column="0"/>
-                                <Button Content="📂"
+                                <Button Content="..."
                                        Classes="ModernIconButtonStyle"
                                        Width="38"
                                        Height="38"
@@ -188,7 +188,7 @@
                     <!-- Opções Avançadas -->
                     <Border Classes="ModernGroupBoxStyle">
                         <StackPanel>
-                            <TextBlock Text="⚙️ Opções Avançadas" FontWeight="Bold" Margin="0,0,0,10"/>
+                            <TextBlock Text="Opções Avançadas" FontWeight="Bold" Margin="0,0,0,10"/>
                         <StackPanel Margin="15">
                             <!-- Password do Arquivo -->
                             <TextBlock Text="Password do Arquivo" FontWeight="SemiBold" Margin="0,0,0,5"/>
@@ -219,7 +219,7 @@
                                         Classes="ModernTextBoxStyle"
                                         Height="34"
                                         Grid.Column="0"/>
-                                <Button Content="📂"
+                                <Button Content="..."
                                        Classes="ModernIconButtonStyle"
                                        Width="34"
                                        Height="34"
@@ -252,30 +252,28 @@
 
             <!-- Splitter -->
             <GridSplitter Grid.Column="1"
-                         Width="10"
+                         Width="8"
                          HorizontalAlignment="Center"
                          VerticalAlignment="Stretch"
-                         Background="#E0E0E0"
+                         Background="#D5DCE6"
                          ShowsPreview="True"/>
 
             <!-- Coluna Direita (Tabs) -->
-            <Border Grid.Column="2" Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="8" Padding="10">
+            <Border Grid.Column="2" Background="White" BorderBrush="#D8DEE8" BorderThickness="1" CornerRadius="12" Padding="12">
                 <TabControl x:Name="RightTabControl"
+                            TabStripPlacement="Left"
                             SelectionChanged="RightTabControl_SelectionChanged"
                             SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}">
                     <!-- Pré-validação Tab -->
                     <TabItem x:Name="PreValidacaoTab">
                         <TabItem.Header>
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="🔍" FontSize="16" VerticalAlignment="Center"/>
-                                <TextBlock Text=" Pré-validação" Margin="5,0,0,0" VerticalAlignment="Center"/>
-                            </StackPanel>
+                            <TextBlock Text="Pré-validação" VerticalAlignment="Center"/>
                         </TabItem.Header>
                         <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,10,0,0">
                             <StackPanel>
                                 <Border Classes="ModernGroupBoxStyle" Margin="0,0,0,12">
                         <StackPanel>
-                            <TextBlock Text="🧪 Pré-verificações do ambiente" FontWeight="Bold" Margin="0,0,0,10"/>
+                            <TextBlock Text="Pré-verificações do ambiente" FontWeight="Bold" Margin="0,0,0,10"/>
                                     <StackPanel Margin="10">
                                         <TextBlock Text="{Binding PreflightStatusText}"
                                                   FontSize="14"
@@ -301,7 +299,7 @@
                                             </ListBox.ItemTemplate>
                                         </ListBox>
 
-                                        <Button Content="🔄 Reexecutar"
+                                        <Button Content="Reexecutar"
                                                Classes="PrimaryButtonStyle"
                                                Width="140" 
                                                Height="36"
@@ -314,7 +312,7 @@
 
                                 <Border Classes="ModernGroupBoxStyle">
                         <StackPanel>
-                            <TextBlock Text="🧾 Validação SAF-T (XSD oficial AT)" FontWeight="Bold" Margin="0,0,0,10"/>
+                            <TextBlock Text="Validação SAF-T (XSD oficial AT)" FontWeight="Bold" Margin="0,0,0,10"/>
                                     <StackPanel Margin="10">
                                         <TextBlock Text="Valide o ficheiro SAF-T selecionado de acordo com o XSD oficial publicado pela AT."
                                                    FontSize="13"
@@ -333,7 +331,7 @@
                                                   Margin="0,0,0,10"/>
 
                                         <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                                            <Button Content="✅ Validar SAF-T"
+                                            <Button Content="Validar SAF-T"
                                                    Classes="PrimaryButtonStyle"
                                                    Width="150"
                                                    Height="36"
@@ -392,10 +390,7 @@
                     <!-- Ajuda Tab -->
                     <TabItem x:Name="AjudaTab">
                         <TabItem.Header>
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="💡" FontSize="16" VerticalAlignment="Center"/>
-                                <TextBlock Text=" Ajuda" Margin="5,0,0,0" VerticalAlignment="Center"/>
-                            </StackPanel>
+                            <TextBlock Text="Ajuda" VerticalAlignment="Center"/>
                         </TabItem.Header>
                         <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="15">
                             <StackPanel>
@@ -441,10 +436,7 @@
                     <!-- Resultado Tab -->
                     <TabItem x:Name="ResultadoTab">
                         <TabItem.Header>
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="📬" FontSize="16" VerticalAlignment="Center"/>
-                                <TextBlock Text=" Resultado" Margin="5,0,0,0" VerticalAlignment="Center"/>
-                            </StackPanel>
+                            <TextBlock Text="Resultado" VerticalAlignment="Center"/>
                         </TabItem.Header>
                         <Grid Margin="10">
                             <Grid.RowDefinitions>
@@ -476,19 +468,19 @@
                             <!-- Ações -->
                             <UniformGrid Grid.Row="2" Columns="3" Margin="0,10,0,0">
                                 <Button x:Name="CopiarResultadoButton"
-                                       Content="📋 Copiar"
+                                       Content="Copiar"
                                        Classes="SecondaryButtonStyle"
                                        Command="{Binding CopiarResultadoCommand}"
                                        Margin="0,0,5,0"
                                        Height="38"/>
                                 <Button x:Name="AbrirLogButton"
-                                       Content="📄 Abrir Log"
+                                       Content="Abrir Log"
                                        Classes="SecondaryButtonStyle"
                                        Command="{Binding AbrirUltimoLogCommand}"
                                        Margin="0,0,5,0"
                                        Height="38"/>
                                 <Button x:Name="LimparResultadoButton"
-                                       Content="🗑️ Limpar"
+                                       Content="Limpar"
                                        Classes="SecondaryButtonStyle"
                                        Command="{Binding LimparResultadoCommand}"
                                        Height="38"/>
@@ -499,10 +491,7 @@
                     <!-- Histórico Tab -->
                     <TabItem x:Name="HistoricoTab">
                         <TabItem.Header>
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="📊" FontSize="16" VerticalAlignment="Center"/>
-                                <TextBlock Text=" Histórico" Margin="5,0,0,0" VerticalAlignment="Center"/>
-                            </StackPanel>
+                            <TextBlock Text="Histórico" VerticalAlignment="Center"/>
                         </TabItem.Header>
                         <Grid Margin="10">
                             <Grid.RowDefinitions>
@@ -535,12 +524,12 @@
                             </Border>
 
                             <UniformGrid Grid.Row="2" Columns="2">
-                                <Button Content="📥 Exportar CSV"
+                                <Button Content="Exportar CSV"
                                        Classes="SecondaryButtonStyle"
                                        Command="{Binding ExportarHistoricoCommand}"
                                        Margin="0,0,5,0"
                                        Height="38"/>
-                                <Button Content="🔄 Limpar Filtros"
+                                <Button Content="Limpar Filtros"
                                        Classes="SecondaryButtonStyle"
                                        Command="{Binding LimparFiltrosHistoricoCommand}"
                                        Height="38"/>
@@ -551,10 +540,7 @@
                     <!-- Sobre Tab -->
                     <TabItem x:Name="SobreTab">
                         <TabItem.Header>
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="ℹ️" FontSize="16" VerticalAlignment="Center"/>
-                                <TextBlock Text=" Sobre" Margin="5,0,0,0" VerticalAlignment="Center"/>
-                            </StackPanel>
+                            <TextBlock Text="Sobre" VerticalAlignment="Center"/>
                         </TabItem.Header>
                         <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20">
                             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
@@ -585,7 +571,7 @@
             <Grid>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock x:Name="StatusTickerIcon" 
-                              Text="ℹ️" 
+                              Text="i" 
                               FontSize="16" 
                               Foreground="White" 
                               Margin="0,0,10,0"
