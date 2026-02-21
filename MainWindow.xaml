@@ -35,7 +35,7 @@
                 </Grid.ColumnDefinitions>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <Border Background="#1AFFFFFF" Padding="10" CornerRadius="12" Margin="0,0,10,0">
-                        <Image x:Name="Logo" Source="/EnviaSaft.png" Height="42"/>
+                        <Image x:Name="Logo" Source="avares://EnvioSafTApp/EnviaSaft.png" Height="42"/>
                     </Border>
                     <StackPanel VerticalAlignment="Center">
                         <TextBlock Text="Envio SAF-T AT" Foreground="White" FontSize="18" FontWeight="Bold"/>
@@ -106,7 +106,7 @@
                                     <TextBlock Text="Operação *" FontWeight="SemiBold" Margin="0,0,0,5"/>
                                     <ComboBox x:Name="OperacaoComboBox"
                                              SelectedValue="{Binding Operacao}"
-                                             SelectedValuePath="Content"
+                                             SelectedValueBinding="{Binding Content}"
                                              Classes="ModernComboBoxStyle"
                                              Height="34">
                                         <ComboBoxItem Content="validar"/>
@@ -518,7 +518,6 @@
                                      IsReadOnly="True"
                                      HeadersVisibility="Column"
                                      GridLinesVisibility="None"
-                                     AlternatingRowBackground="#F5F5F5"
                                      RowHeight="32">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Data/Hora" Binding="{Binding DataHora, StringFormat=dd/MM/yyyy HH:mm}" Width="130"/>
@@ -559,7 +558,7 @@
                         </TabItem.Header>
                         <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20">
                             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                <Image Source="/EnviaSaft.png" Height="80" Margin="0,0,0,20"/>
+                                <Image Source="avares://EnvioSafTApp/EnviaSaft.png" Height="80" Margin="0,0,0,20"/>
                                 <TextBlock Text="EnvioSafT AT" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,10"/>
                                 <TextBlock Text="{Binding AppVersion}" FontSize="14" HorizontalAlignment="Center" Foreground="#666" Margin="0,0,0,30"/>
                                 

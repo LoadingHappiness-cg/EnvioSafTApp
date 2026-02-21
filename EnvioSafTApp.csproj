@@ -10,9 +10,9 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>1.1.2</Version>
-    <AssemblyVersion>1.1.2.0</AssemblyVersion>
-    <FileVersion>1.1.2.0</FileVersion>
+    <Version>2.0.0</Version>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
+    <FileVersion>2.0.0.0</FileVersion>
     <ApplicationIcon>Assets\EnviaSaft.ico</ApplicationIcon>
   </PropertyGroup>
 
@@ -53,10 +53,19 @@
   </ItemGroup>
 
   <ItemGroup>
+    <AvaloniaXaml Include="**/*.xaml" Exclude="bin/**;obj/**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Resource Include="Assets\loading-logo.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
     <Resource Include="EnviaSaft.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="Assets/**" />
+    <AvaloniaResource Include="EnviaSaft.png" />
   </ItemGroup>
 
 </Project>

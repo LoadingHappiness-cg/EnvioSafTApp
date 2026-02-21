@@ -2,11 +2,11 @@
 
 [Setup]
 AppName=EnviaSaft
-AppVersion=1.1.2
+AppVersion=2.0.0
 DefaultDirName={autopf}\EnviaSaft
 DefaultGroupName=EnviaSaft
 OutputDir=.\Output
-OutputBaseFilename=EnviaSaftSetup_v1.1.2
+OutputBaseFilename=EnviaSaftSetup_v2.0.0
 Compression=lzma
 SolidCompression=yes
 ArchitecturesInstallIn64BitMode=x64
