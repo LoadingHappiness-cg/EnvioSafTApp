@@ -2,9 +2,12 @@
         xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:converters="clr-namespace:EnvioSafTApp.Converters"
-        Title="Envio SAF-T AT" Height="800" Width="1300" WindowStartupLocation="CenterScreen"
-        MinWidth="1200"
-        MinHeight="750">
+        Title="EnviaSaft"
+        Height="860"
+        Width="1360"
+        WindowStartupLocation="CenterScreen"
+        MinWidth="1220"
+        MinHeight="760">
     <Window.Resources>
         <converters:TickerTypeToColorConverter x:Key="TickerTypeToColorConverter"/>
         <converters:TickerTypeToIconConverter x:Key="TickerTypeToIconConverter"/>
@@ -12,275 +15,138 @@
         <converters:SaftSeverityToColorConverter x:Key="SaftSeverityToColorConverter"/>
     </Window.Resources>
 
-    <Grid Background="#F1F4F9">
+    <Grid Classes="WindowRootSurface">
         <Grid.RowDefinitions>
-            <RowDefinition Height="96"/>
+            <RowDefinition Height="86"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="40"/>
+            <RowDefinition Height="44"/>
         </Grid.RowDefinitions>
 
-        <!-- Cabeçalho -->
-        <Border Grid.Row="0" Padding="24,14" CornerRadius="0,0,14,14" >
-            <Border.Background>
-                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                    <GradientStop Color="#31B7E8" Offset="0"/>
-                    <GradientStop Color="#4EC6EA" Offset="1"/>
-                </LinearGradientBrush>
-            </Border.Background>
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <Border Background="#1AFFFFFF" Padding="10" CornerRadius="12" Margin="0,0,12,0">
-                        <Image x:Name="Logo" Source="avares://EnvioSafTApp/EnviaSaft.png" Height="42"/>
+        <Border Grid.Row="0" Classes="TopGlassBar" Margin="14,14,14,0" Padding="18,12">
+            <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="12">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="12">
+                    <Border Classes="BrandMarkWrap" Padding="10,6">
+                        <Image Source="avares://EnvioSafTApp/EnviaSaft.png" Height="38"/>
                     </Border>
-                    <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="Envio SAF-T AT" Foreground="White" FontSize="18" FontWeight="Bold"/>
-                        <TextBlock Text="Aplicação gratuita para envio de SAF-T para a AT" Foreground="#E0F3FF" FontSize="12" Margin="0,2,0,0"/>
+                    <StackPanel Spacing="2" VerticalAlignment="Center">
+                        <TextBlock Text="Envio SAF-T AT" Classes="TopTitleText"/>
+                        <TextBlock Text="Aplicação para envio seguro e validação SAF-T" Classes="TopSubtitleText"/>
                     </StackPanel>
                 </StackPanel>
 
-                <Button Grid.Column="2"
+                <Border Grid.Column="2" Classes="VersionChip" VerticalAlignment="Center" Margin="0,0,2,0">
+                    <TextBlock Text="{Binding AppVersion}" Classes="VersionText"/>
+                </Border>
+
+                <Button Grid.Column="3"
                         Content="ENVIAR"
                         Classes="ModernSendButtonStyle"
                         Command="{Binding EnviarCommand}"
-                        Margin="0,0,12,0"
                         VerticalAlignment="Center"
                         IsEnabled="{Binding IsSending, Converter={StaticResource InverseBooleanConverter}}"/>
-
-                <Border Grid.Column="3" Background="#29FFFFFF" Padding="14,9" CornerRadius="12" VerticalAlignment="Center">
-                    <TextBlock Text="{Binding AppVersion}"
-                               Foreground="White"
-                               FontSize="12"
-                               FontWeight="SemiBold"
-                               VerticalAlignment="Center"
-                               HorizontalAlignment="Center"/>
-                </Border>
             </Grid>
         </Border>
 
-        <!-- Conteúdo principal -->
-        <Grid Grid.Row="1" Margin="20">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="1.6*" MinWidth="520"/>
-                <ColumnDefinition Width="8"/>
-                <ColumnDefinition Width="0.9*" MinWidth="420"/>
-            </Grid.ColumnDefinitions>
+        <Border Grid.Row="1" Classes="AppShell" Margin="14,12,14,10" Padding="10">
+            <TabControl x:Name="RightTabControl"
+                        Classes="MacMainTabs"
+                        TabStripPlacement="Left"
+                        SelectionChanged="RightTabControl_SelectionChanged"
+                        SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}">
 
-            <!-- Coluna Esquerda (formulário) -->
-            <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto">
-                <StackPanel>
-                    <!-- Dados do Envio -->
-                    <Border Classes="ModernGroupBoxStyle" Margin="0,0,0,15">
-                        <StackPanel>
-                            <TextBlock Text="Dados do Envio" FontWeight="Bold" Margin="0,0,0,10"/>
-                        <StackPanel Margin="15">
-                            <!-- Ano, Mês, Operação -->
-                            <Grid Margin="0,0,0,15">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="1.5*"/>
-                                </Grid.ColumnDefinitions>
-                                
-                                <StackPanel Grid.Column="0" Margin="0,0,10,0">
-                                    <TextBlock Text="Ano *" FontWeight="SemiBold" Margin="0,0,0,5"/>
-                                    <TextBox x:Name="AnoTextBox"
-                                            Text="{Binding Ano, UpdateSourceTrigger=PropertyChanged}"
-                                            Classes="ModernTextBoxStyle"
-                                            Height="34"/>
-                                </StackPanel>
-                                
-                                <StackPanel Grid.Column="1" Margin="0,0,10,0">
-                                    <TextBlock Text="Mês *" FontWeight="SemiBold" Margin="0,0,0,5"/>
-                                    <TextBox x:Name="MesTextBox"
-                                            Text="{Binding Mes, UpdateSourceTrigger=PropertyChanged}"
-                                            Classes="ModernTextBoxStyle"
-                                            Height="34"/>
-                                </StackPanel>
-                                
-                                <StackPanel Grid.Column="2">
-                                    <TextBlock Text="Operação *" FontWeight="SemiBold" Margin="0,0,0,5"/>
-                                    <ComboBox x:Name="OperacaoComboBox"
-                                             SelectedValue="{Binding Operacao}"
-                                             SelectedValueBinding="{Binding Content}"
-                                             Classes="ModernComboBoxStyle"
-                                             Height="34">
-                                        <ComboBoxItem Content="validar"/>
-                                        <ComboBoxItem Content="enviar" IsSelected="True"/>
-                                    </ComboBox>
-                                </StackPanel>
-                            </Grid>
+                <TabItem x:Name="PreValidacaoTab" Classes="SidebarNavItem">
+                    <TabItem.Header>
+                        <TextBlock Text="Pré-validação"/>
+                    </TabItem.Header>
+                    <Grid ColumnDefinitions="1.6*,0.9*" ColumnSpacing="14">
+                        <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto">
+                            <StackPanel Spacing="12">
+                                <Border Classes="ModernGroupBoxStyle">
+                                    <StackPanel Margin="6" Spacing="10">
+                                        <TextBlock Text="Dados do envio" Classes="SectionTitle"/>
+                                        <Grid ColumnDefinitions="*,*,1.5*" ColumnSpacing="10">
+                                            <StackPanel Grid.Column="0" Spacing="4">
+                                                <TextBlock Text="Ano *" Classes="FieldLabel"/>
+                                                <TextBox x:Name="AnoTextBox" Text="{Binding Ano, UpdateSourceTrigger=PropertyChanged}" Classes="ModernTextBoxStyle" Height="36"/>
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="1" Spacing="4">
+                                                <TextBlock Text="Mês *" Classes="FieldLabel"/>
+                                                <TextBox x:Name="MesTextBox" Text="{Binding Mes, UpdateSourceTrigger=PropertyChanged}" Classes="ModernTextBoxStyle" Height="36"/>
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="2" Spacing="4">
+                                                <TextBlock Text="Operação *" Classes="FieldLabel"/>
+                                                <ComboBox x:Name="OperacaoComboBox"
+                                                          SelectedValue="{Binding Operacao}"
+                                                          SelectedValueBinding="{Binding Content}"
+                                                          Classes="ModernComboBoxStyle"
+                                                          Height="36">
+                                                    <ComboBoxItem Content="validar"/>
+                                                    <ComboBoxItem Content="enviar" IsSelected="True"/>
+                                                </ComboBox>
+                                            </StackPanel>
+                                        </Grid>
 
-                            <!-- NIF e Password -->
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                
-                                <StackPanel Grid.Column="0" Margin="0,0,10,0">
-                                    <TextBlock Text="NIF *" FontWeight="SemiBold" Margin="0,0,0,5"/>
-                                    <TextBox x:Name="NifTextBox"
-                                            Text="{Binding Nif, UpdateSourceTrigger=PropertyChanged}"
-                                            Classes="ModernTextBoxStyle"
-                                            Height="34"/>
-                                </StackPanel>
-                                
-                                <StackPanel Grid.Column="1">
-                                    <TextBlock Text="Password *" FontWeight="SemiBold" Margin="0,0,0,5"/>
-                                    <TextBox x:Name="PasswordBox"
-                                             Text="{Binding Password, UpdateSourceTrigger=PropertyChanged}"
-                                             Classes="ModernPasswordBoxStyle"
-                                             PasswordChar="●"
-                                             Height="34"/>
-                                </StackPanel>
-                            </Grid>
-                        </StackPanel>
-                    </StackPanel>
-                    </Border>
+                                        <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                                            <StackPanel Grid.Column="0" Spacing="4">
+                                                <TextBlock Text="NIF *" Classes="FieldLabel"/>
+                                                <TextBox x:Name="NifTextBox" Text="{Binding Nif, UpdateSourceTrigger=PropertyChanged}" Classes="ModernTextBoxStyle" Height="36"/>
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="1" Spacing="4">
+                                                <TextBlock Text="Password *" Classes="FieldLabel"/>
+                                                <TextBox x:Name="PasswordBox" Text="{Binding Password, UpdateSourceTrigger=PropertyChanged}" Classes="ModernPasswordBoxStyle" PasswordChar="●" Height="36"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
 
-                    <!-- Ficheiro SAF-T -->
-                    <Border Classes="ModernGroupBoxStyle" Margin="0,0,0,15">
-                        <StackPanel>
-                            <TextBlock Text="Ficheiro SAF-T" FontWeight="Bold" Margin="0,0,0,10"/>
-                        <StackPanel Margin="15">
-                            <TextBlock Text="Ficheiro *" FontWeight="SemiBold" Margin="0,0,0,5"/>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBox x:Name="FicheiroTextBox"
-                                        Text="{Binding FicheiroSafT, UpdateSourceTrigger=PropertyChanged}"
-                                        Classes="ModernTextBoxStyle"
-                                        Height="38"
-                                        Grid.Column="0"/>
-                                <Button Content="..."
-                                       Classes="ModernIconButtonStyle"
-                                       Width="38"
-                                       Height="38"
-                                       Margin="8,0,0,0"
-                                       Grid.Column="1"
-                                       FontSize="16"
-                                       Command="{Binding BrowseFileCommand}"/>
-                            </Grid>
-                            
-                            <!-- Checkboxes -->
-                            <StackPanel Orientation="Horizontal" Margin="0,15,0,0">
-                                <CheckBox x:Name="TesteCheckBox" 
-                                         IsChecked="{Binding IsTeste}" 
-                                         Content="Envio de Teste" 
-                                         Margin="0,0,25,0"
-                                         VerticalAlignment="Center"/>
-                                <CheckBox x:Name="AutoFaturacaoCheckBox" 
-                                         IsChecked="{Binding IsAutoFaturacao}" 
-                                         Content="Autofaturação"
-                                         VerticalAlignment="Center"/>
+                                <Border Classes="ModernGroupBoxStyle">
+                                    <StackPanel Margin="6" Spacing="10">
+                                        <TextBlock Text="Ficheiro SAF-T" Classes="SectionTitle"/>
+                                        <TextBlock Text="Ficheiro *" Classes="FieldLabel"/>
+                                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                            <TextBox x:Name="FicheiroTextBox" Text="{Binding FicheiroSafT, UpdateSourceTrigger=PropertyChanged}" Classes="ModernTextBoxStyle" Height="38" Grid.Column="0"/>
+                                            <Button Content="..." Classes="ModernIconButtonStyle" Width="40" Height="38" Grid.Column="1" FontSize="16" Command="{Binding BrowseFileCommand}"/>
+                                        </Grid>
+
+                                        <StackPanel Orientation="Horizontal" Spacing="24" Margin="0,2,0,0">
+                                            <CheckBox x:Name="TesteCheckBox" IsChecked="{Binding IsTeste}" Content="Envio de Teste" VerticalAlignment="Center"/>
+                                            <CheckBox x:Name="AutoFaturacaoCheckBox" IsChecked="{Binding IsAutoFaturacao}" Content="Autofaturação" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Classes="ModernGroupBoxStyle">
+                                    <StackPanel Margin="6" Spacing="8">
+                                        <TextBlock Text="Opções avançadas" Classes="SectionTitle"/>
+
+                                        <TextBlock Text="Password do Arquivo" Classes="FieldLabel"/>
+                                        <TextBox x:Name="ArquivoPasswordBox" Text="{Binding ArquivoPassword, UpdateSourceTrigger=PropertyChanged}" Classes="ModernPasswordBoxStyle" PasswordChar="●" Height="36"/>
+
+                                        <TextBlock Text="NIF Emitente" Classes="FieldLabel"/>
+                                        <TextBox x:Name="NifEmitenteTextBox" Text="{Binding NifEmitente, UpdateSourceTrigger=PropertyChanged}" Classes="ModernTextBoxStyle" Height="36"/>
+
+                                        <TextBlock Text="Ficheiro de Retorno" Classes="FieldLabel"/>
+                                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                            <TextBox x:Name="OutputTextBox" Text="{Binding OutputFile, UpdateSourceTrigger=PropertyChanged}" Classes="ModernTextBoxStyle" Height="36" Grid.Column="0"/>
+                                            <Button Content="..." Classes="ModernIconButtonStyle" Width="36" Height="36" Grid.Column="1" FontSize="14" Command="{Binding BrowseOutputFileCommand}"/>
+                                        </Grid>
+
+                                        <TextBlock Text="Memória (ex: -Xmx512m)" Classes="FieldLabel"/>
+                                        <TextBox x:Name="MemoriaTextBox" Text="{Binding Memoria, UpdateSourceTrigger=PropertyChanged}" Classes="ModernTextBoxStyle" Height="36"/>
+
+                                        <TextBlock Text="Etiquetas (separadas por vírgula)" Classes="FieldLabel"/>
+                                        <TextBox x:Name="EtiquetasTextBox" Text="{Binding Etiquetas, UpdateSourceTrigger=PropertyChanged}" Classes="ModernTextBoxStyle" Height="36"/>
+                                    </StackPanel>
+                                </Border>
                             </StackPanel>
-                        </StackPanel>
-                    </StackPanel>
-                    </Border>
+                        </ScrollViewer>
 
-                    <!-- Opções Avançadas -->
-                    <Border Classes="ModernGroupBoxStyle">
-                        <StackPanel>
-                            <TextBlock Text="Opções Avançadas" FontWeight="Bold" Margin="0,0,0,10"/>
-                        <StackPanel Margin="15">
-                            <!-- Password do Arquivo -->
-                            <TextBlock Text="Password do Arquivo" FontWeight="SemiBold" Margin="0,0,0,5"/>
-                            <TextBox x:Name="ArquivoPasswordBox"
-                                     Text="{Binding ArquivoPassword, UpdateSourceTrigger=PropertyChanged}"
-                                     Classes="ModernPasswordBoxStyle"
-                                     PasswordChar="●"
-                                     Height="34"
-                                     Margin="0,0,0,12"/>
-
-                            <!-- NIF Emitente -->
-                            <TextBlock Text="NIF Emitente" FontWeight="SemiBold" Margin="0,0,0,5"/>
-                            <TextBox x:Name="NifEmitenteTextBox"
-                                    Text="{Binding NifEmitente, UpdateSourceTrigger=PropertyChanged}"
-                                    Classes="ModernTextBoxStyle"
-                                    Height="34"
-                                    Margin="0,0,0,12"/>
-
-                            <!-- Ficheiro de Retorno -->
-                            <TextBlock Text="Ficheiro de Retorno" FontWeight="SemiBold" Margin="0,0,0,5"/>
-                            <Grid Margin="0,0,0,12">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBox x:Name="OutputTextBox"
-                                        Text="{Binding OutputFile, UpdateSourceTrigger=PropertyChanged}"
-                                        Classes="ModernTextBoxStyle"
-                                        Height="34"
-                                        Grid.Column="0"/>
-                                <Button Content="..."
-                                       Classes="ModernIconButtonStyle"
-                                       Width="34"
-                                       Height="34"
-                                       Margin="8,0,0,0"
-                                       Grid.Column="1"
-                                       FontSize="14"
-                                       Command="{Binding BrowseOutputFileCommand}"/>
-                            </Grid>
-
-                            <!-- Memória -->
-                            <TextBlock Text="Memória (ex: -Xmx512m)" FontWeight="SemiBold" Margin="0,0,0,5"/>
-                            <TextBox x:Name="MemoriaTextBox"
-                                    Text="{Binding Memoria, UpdateSourceTrigger=PropertyChanged}"
-                                    Classes="ModernTextBoxStyle"
-                                    Height="34"
-                                    Margin="0,0,0,12"/>
-
-                            <!-- Etiquetas -->
-                            <TextBlock Text="Etiquetas (separadas por vírgula)" FontWeight="SemiBold" Margin="0,0,0,5"/>
-                            <TextBox x:Name="EtiquetasTextBox"
-                                    Text="{Binding Etiquetas, UpdateSourceTrigger=PropertyChanged}"
-                                    Classes="ModernTextBoxStyle"
-                                    Height="34"/>
-                        </StackPanel>
-                    </StackPanel>
-                    </Border>
-
-                </StackPanel>
-            </ScrollViewer>
-
-            <!-- Splitter -->
-            <GridSplitter Grid.Column="1"
-                         Width="8"
-                         HorizontalAlignment="Center"
-                         VerticalAlignment="Stretch"
-                         Background="#D5DCE6"
-                         ShowsPreview="True"/>
-
-            <!-- Coluna Direita (Tabs) -->
-            <Border Grid.Column="2" Background="White" BorderBrush="#D8DEE8" BorderThickness="1" CornerRadius="12" Padding="12">
-                <TabControl x:Name="RightTabControl"
-                            TabStripPlacement="Left"
-                            SelectionChanged="RightTabControl_SelectionChanged"
-                            SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}">
-                    <!-- Pré-validação Tab -->
-                    <TabItem x:Name="PreValidacaoTab">
-                        <TabItem.Header>
-                            <TextBlock Text="Pré-validação" VerticalAlignment="Center"/>
-                        </TabItem.Header>
-                        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,10,0,0">
-                            <StackPanel>
-                                <Border Classes="ModernGroupBoxStyle" Margin="0,0,0,12">
-                        <StackPanel>
-                            <TextBlock Text="Pré-verificações do ambiente" FontWeight="Bold" Margin="0,0,0,10"/>
-                                    <StackPanel Margin="10">
-                                        <TextBlock Text="{Binding PreflightStatusText}"
-                                                  FontSize="14"
-                                                  FontWeight="SemiBold"
-                                                  Foreground="#1976D2"
-                                                  Margin="0,0,0,12"/>
+                        <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto">
+                            <StackPanel Spacing="12">
+                                <Border Classes="ModernGroupBoxStyle">
+                                    <StackPanel Margin="6" Spacing="8">
+                                        <TextBlock Text="Pré-verificações do ambiente" Classes="SectionTitle"/>
+                                        <TextBlock Text="{Binding PreflightStatusText}" Classes="AccentSummaryText"/>
 
                                         <ListBox x:Name="PreflightListView"
                                                  ItemsSource="{Binding PreflightChecks}"
@@ -290,63 +156,38 @@
                                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                                             <ListBox.ItemTemplate>
                                                 <DataTemplate>
-                                                    <Border Padding="10" Margin="0,0,0,8" Background="#F8F9FA" CornerRadius="4">
-                                                        <StackPanel>
-                                                            <TextBlock Text="{Binding Nome}" FontWeight="SemiBold" FontSize="13"/>
-                                                            <TextBlock Text="{Binding Detalhes}" TextWrapping="Wrap" Margin="0,4,0,0" FontSize="12"/>
+                                                    <Border Classes="CheckItemCard">
+                                                        <StackPanel Spacing="4">
+                                                            <TextBlock Text="{Binding Nome}" FontWeight="SemiBold"/>
+                                                            <TextBlock Text="{Binding Detalhes}" TextWrapping="Wrap"/>
                                                         </StackPanel>
                                                     </Border>
                                                 </DataTemplate>
                                             </ListBox.ItemTemplate>
                                         </ListBox>
 
-                                        <Button Content="Reexecutar"
-                                               Classes="PrimaryButtonStyle"
-                                               Width="140" 
-                                               Height="36"
-                                               HorizontalAlignment="Right"
-                                               Margin="0,10,0,0"
-                                               Command="{Binding RunPreflightCheckCommand}"/>
+                                        <Button Content="Reexecutar" Classes="PrimaryButtonStyle" Width="150" Height="36" HorizontalAlignment="Stretch" Command="{Binding RunPreflightCheckCommand}"/>
                                     </StackPanel>
-                                </StackPanel>
-                    </Border>
+                                </Border>
 
                                 <Border Classes="ModernGroupBoxStyle">
-                        <StackPanel>
-                            <TextBlock Text="Validação SAF-T (XSD oficial AT)" FontWeight="Bold" Margin="0,0,0,10"/>
-                                    <StackPanel Margin="10">
-                                        <TextBlock Text="Valide o ficheiro SAF-T selecionado de acordo com o XSD oficial publicado pela AT."
-                                                   FontSize="13"
-                                                   Margin="0,0,0,6"
-                                                   TextWrapping="Wrap"/>
-                                        <TextBlock Text="{Binding SaftValidationSummary}"
-                                                  FontSize="13"
-                                                  FontWeight="SemiBold"
-                                                  Foreground="#0D47A1"
-                                                  TextWrapping="Wrap"
-                                                  Margin="0,0,0,6"/>
-                                        <TextBlock Text="{Binding SaftSchemaInfo}"
-                                                  FontSize="12"
-                                                  Foreground="#666"
-                                                  TextWrapping="Wrap"
-                                                  Margin="0,0,0,10"/>
+                                    <StackPanel Margin="6" Spacing="8">
+                                        <TextBlock Text="Validação SAF-T (XSD oficial AT)" Classes="SectionTitle"/>
+                                        <TextBlock Text="Valide o ficheiro SAF-T selecionado de acordo com o XSD oficial publicado pela AT." TextWrapping="Wrap"/>
+                                        <TextBlock Text="{Binding SaftValidationSummary}" Classes="AccentSummaryText" TextWrapping="Wrap"/>
+                                        <TextBlock Text="{Binding SaftSchemaInfo}" Classes="MutedText" TextWrapping="Wrap"/>
 
-                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                        <StackPanel Spacing="8">
                                             <Button Content="Validar SAF-T"
-                                                   Classes="PrimaryButtonStyle"
-                                                   Width="150"
-                                                   Height="36"
-                                                   IsEnabled="{Binding IsSaftValidationRunning, Converter={StaticResource InverseBooleanConverter}}"
-                                                   Command="{Binding ValidarSafTCommand}"/>
-                                            <TextBlock Text="{Binding FicheiroSafT}"
-                                                      Margin="12,0,0,0"
-                                                      VerticalAlignment="Center"
-                                                      Foreground="#444"
-                                                      TextWrapping="Wrap"
-                                                      TextTrimming="CharacterEllipsis"/>
+                                                    Classes="PrimaryButtonStyle"
+                                                    Width="150"
+                                                    Height="36"
+                                                    IsEnabled="{Binding IsSaftValidationRunning, Converter={StaticResource InverseBooleanConverter}}"
+                                                    Command="{Binding ValidarSafTCommand}"/>
+                                            <TextBlock Text="{Binding FicheiroSafT}" Classes="MutedText" TextWrapping="Wrap" TextTrimming="CharacterEllipsis"/>
                                         </StackPanel>
 
-                                        <ItemsControl ItemsSource="{Binding SaftValidationSugestoes}" Margin="0,0,0,10">
+                                        <ItemsControl ItemsSource="{Binding SaftValidationSugestoes}">
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate>
                                                     <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
@@ -357,24 +198,14 @@
                                             </ItemsControl.ItemTemplate>
                                         </ItemsControl>
 
-                                        <Border Background="#F8F9FA" BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="6">
-                                            <ListBox ItemsSource="{Binding SaftValidationIssues}"
-                                                     BorderThickness="0"
-                                                     Background="Transparent"
-                                                     ScrollViewer.VerticalScrollBarVisibility="Auto"
-                                                     MaxHeight="240">
+                                        <Border Classes="IssuesPanel">
+                                            <ListBox ItemsSource="{Binding SaftValidationIssues}" BorderThickness="0" Background="Transparent" ScrollViewer.VerticalScrollBarVisibility="Auto" MaxHeight="240">
                                                 <ListBox.ItemTemplate>
                                                     <DataTemplate>
-                                                        <Border Padding="10" Margin="0,0,0,8" Background="White" CornerRadius="4" BorderBrush="#E0E0E0" BorderThickness="1">
+                                                        <Border Classes="IssueItemCard">
                                                             <StackPanel>
-                                                                <TextBlock Text="{Binding Resumo}"
-                                                                           TextWrapping="Wrap"
-                                                                           FontWeight="SemiBold"
-                                                                           Foreground="{Binding Severidade, Converter={StaticResource SaftSeverityToColorConverter}}"/>
-                                                                <TextBlock Text="{Binding Sugestao}"
-                                                                          Margin="0,4,0,0"
-                                                                          TextWrapping="Wrap"
-                                                                          Foreground="#424242"/>
+                                                                <TextBlock Text="{Binding Resumo}" TextWrapping="Wrap" FontWeight="SemiBold" Foreground="{Binding Severidade, Converter={StaticResource SaftSeverityToColorConverter}}"/>
+                                                                <TextBlock Text="{Binding Sugestao}" Margin="0,4,0,0" TextWrapping="Wrap"/>
                                                             </StackPanel>
                                                         </Border>
                                                     </DataTemplate>
@@ -382,208 +213,135 @@
                                             </ListBox>
                                         </Border>
                                     </StackPanel>
-                                </StackPanel>
-                    </Border>
-                            </StackPanel>
-                        </ScrollViewer>
-                    </TabItem>
-
-                    <!-- Ajuda Tab -->
-                    <TabItem x:Name="AjudaTab">
-                        <TabItem.Header>
-                            <TextBlock Text="Ajuda" VerticalAlignment="Center"/>
-                        </TabItem.Header>
-                        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="15">
-                            <StackPanel>
-                                <TextBlock Text="Como usar" FontSize="18" FontWeight="Bold" Foreground="#1976D2" Margin="0,0,0,15"/>
-                                
-                                <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
-                                    <Bold>1. Preencha os campos obrigatórios (*)</Bold>
-                                    <LineBreak/>
-                                    Ano, Mês, NIF, Password e Ficheiro SAF-T são obrigatórios.
-                                </TextBlock>
-
-                                <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
-                                    <Bold>2. Selecione o ficheiro SAF-T</Bold>
-                                    <LineBreak/>
-                                    Clique no botão 📂 para escolher o ficheiro XML ou arquivo comprimido.
-                                </TextBlock>
-
-                                <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
-                                    <Bold>3. Configure as opções</Bold>
-                                    <LineBreak/>
-                                    Marque "Envio de Teste" para testar sem submeter oficialmente.
-                                </TextBlock>
-
-                                <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
-                                    <Bold>4. Clique em ENVIAR</Bold>
-                                    <LineBreak/>
-                                    O resultado aparecerá no separador "Resultado".
-                                </TextBlock>
-
-                                <Border Background="#FFF3E0" BorderBrush="#FFB300" BorderThickness="1" CornerRadius="4" Padding="12" Margin="0,20,0,0">
-                                    <StackPanel>
-                                        <TextBlock Text="⚠️ Importante" FontWeight="Bold" FontSize="14" Foreground="#F57C00"/>
-                                        <TextBlock TextWrapping="Wrap" Margin="0,8,0,0">
-                                            Certifique-se de que todos os campos obrigatórios estão preenchidos antes de enviar.
-                                            Se o botão ENVIAR não responder, verifique se preencheu todos os campos marcados com *.
-                                        </TextBlock>
-                                    </StackPanel>
                                 </Border>
                             </StackPanel>
                         </ScrollViewer>
-                    </TabItem>
+                    </Grid>
+                </TabItem>
 
-                    <!-- Resultado Tab -->
-                    <TabItem x:Name="ResultadoTab">
-                        <TabItem.Header>
-                            <TextBlock Text="Resultado" VerticalAlignment="Center"/>
-                        </TabItem.Header>
-                        <Grid Margin="10">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="*"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-
-                            <!-- Resumo -->
-                            <Border Grid.Row="0" Background="#E8F5E9" BorderBrush="#4CAF50" BorderThickness="1" CornerRadius="4" Padding="12" Margin="0,0,0,10">
-                                <TextBlock x:Name="OutputSummaryTextBlock"
-                                          Text="{Binding OutputSummary}"
-                                          TextWrapping="Wrap"
-                                          FontSize="12"/>
+                <TabItem x:Name="AjudaTab" Classes="SidebarNavItem">
+                    <TabItem.Header>
+                        <TextBlock Text="Ajuda"/>
+                    </TabItem.Header>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="14">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Como usar" Classes="HelpTitle"/>
+                            <TextBlock TextWrapping="Wrap"><Bold>1. Preencha os campos obrigatórios (*)</Bold><LineBreak/>Ano, Mês, NIF, Password e Ficheiro SAF-T são obrigatórios.</TextBlock>
+                            <TextBlock TextWrapping="Wrap"><Bold>2. Selecione o ficheiro SAF-T</Bold><LineBreak/>Clique no botão ... para escolher o ficheiro XML ou arquivo comprimido.</TextBlock>
+                            <TextBlock TextWrapping="Wrap"><Bold>3. Configure as opções</Bold><LineBreak/>Marque "Envio de Teste" para testar sem submeter oficialmente.</TextBlock>
+                            <TextBlock TextWrapping="Wrap"><Bold>4. Clique em ENVIAR</Bold><LineBreak/>O resultado aparecerá no separador "Resultado".</TextBlock>
+                            <Border Classes="WarningCard" Margin="0,8,0,0">
+                                <StackPanel Spacing="6">
+                                    <TextBlock Text="Importante" FontWeight="Bold"/>
+                                    <TextBlock TextWrapping="Wrap">Certifique-se de que todos os campos obrigatórios estão preenchidos antes de enviar.</TextBlock>
+                                </StackPanel>
                             </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
 
-                            <!-- Output completo -->
-                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                <TabItem x:Name="ResultadoTab" Classes="SidebarNavItem">
+                    <TabItem.Header>
+                        <TextBlock Text="Resultado"/>
+                    </TabItem.Header>
+                    <Grid Margin="12" RowDefinitions="Auto,*,Auto">
+                        <Border Grid.Row="0" Classes="SuccessCard" Margin="0,0,0,10">
+                            <TextBlock x:Name="OutputSummaryTextBlock" Text="{Binding OutputSummary}" TextWrapping="Wrap" FontSize="12"/>
+                        </Border>
+
+                        <Border Grid.Row="1" Classes="ModernGroupBoxStyle" Padding="8">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
                                 <TextBox x:Name="OutputTextBlock"
-                                        Text="{Binding OutputText}"
-                                        IsReadOnly="True"
-                                        TextWrapping="Wrap"
-                                        BorderThickness="0"
-                                        Background="Transparent"
-                                        FontFamily="Consolas"
-                                        FontSize="11"/>
+                                         Text="{Binding OutputText}"
+                                         IsReadOnly="True"
+                                         TextWrapping="Wrap"
+                                         BorderThickness="0"
+                                         Background="Transparent"
+                                         FontFamily="Menlo, Monaco, SF Mono, Consolas"
+                                         FontSize="11"/>
                             </ScrollViewer>
+                        </Border>
 
-                            <!-- Ações -->
-                            <UniformGrid Grid.Row="2" Columns="3" Margin="0,10,0,0">
-                                <Button x:Name="CopiarResultadoButton"
-                                       Content="Copiar"
-                                       Classes="SecondaryButtonStyle"
-                                       Command="{Binding CopiarResultadoCommand}"
-                                       Margin="0,0,5,0"
-                                       Height="38"/>
-                                <Button x:Name="AbrirLogButton"
-                                       Content="Abrir Log"
-                                       Classes="SecondaryButtonStyle"
-                                       Command="{Binding AbrirUltimoLogCommand}"
-                                       Margin="0,0,5,0"
-                                       Height="38"/>
-                                <Button x:Name="LimparResultadoButton"
-                                       Content="Limpar"
-                                       Classes="SecondaryButtonStyle"
-                                       Command="{Binding LimparResultadoCommand}"
-                                       Height="38"/>
-                            </UniformGrid>
-                        </Grid>
-                    </TabItem>
+                        <UniformGrid Grid.Row="2" Columns="3" Margin="0,10,0,0">
+                            <Button x:Name="CopiarResultadoButton" Content="Copiar" Classes="SecondaryButtonStyle" Command="{Binding CopiarResultadoCommand}" Margin="0,0,5,0" Height="38"/>
+                            <Button x:Name="AbrirLogButton" Content="Abrir Log" Classes="SecondaryButtonStyle" Command="{Binding AbrirUltimoLogCommand}" Margin="0,0,5,0" Height="38"/>
+                            <Button x:Name="LimparResultadoButton" Content="Limpar" Classes="SecondaryButtonStyle" Command="{Binding LimparResultadoCommand}" Height="38"/>
+                        </UniformGrid>
+                    </Grid>
+                </TabItem>
 
-                    <!-- Histórico Tab -->
-                    <TabItem x:Name="HistoricoTab">
-                        <TabItem.Header>
-                            <TextBlock Text="Histórico" VerticalAlignment="Center"/>
-                        </TabItem.Header>
-                        <Grid Margin="10">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="*"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-
+                <TabItem x:Name="HistoricoTab" Classes="SidebarNavItem">
+                    <TabItem.Header>
+                        <TextBlock Text="Histórico"/>
+                    </TabItem.Header>
+                    <Grid Margin="12" RowDefinitions="*,Auto,Auto">
+                        <Border Classes="ModernGroupBoxStyle" Grid.Row="0" Padding="8">
                             <DataGrid x:Name="HistoricoDataGrid"
-                                     Grid.Row="0"
-                                     ItemsSource="{Binding HistoricoFiltrado}"
-                                     AutoGenerateColumns="False"
-                                     IsReadOnly="True"
-                                     HeadersVisibility="Column"
-                                     GridLinesVisibility="None"
-                                     RowHeight="32">
+                                      ItemsSource="{Binding HistoricoFiltrado}"
+                                      AutoGenerateColumns="False"
+                                      IsReadOnly="True"
+                                      HeadersVisibility="Column"
+                                      GridLinesVisibility="None"
+                                      RowHeight="32">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Data/Hora" Binding="{Binding DataHora, StringFormat=dd/MM/yyyy HH:mm}" Width="130"/>
                                     <DataGridTextColumn Header="Empresa" Binding="{Binding EmpresaNome}" Width="*"/>
-                                    <DataGridTextColumn Header="Operação" Binding="{Binding Operacao}" Width="80"/>
-                                    <DataGridTextColumn Header="Resultado" Binding="{Binding Resultado}" Width="90"/>
+                                    <DataGridTextColumn Header="Operação" Binding="{Binding Operacao}" Width="100"/>
+                                    <DataGridTextColumn Header="Resultado" Binding="{Binding Resultado}" Width="100"/>
                                 </DataGrid.Columns>
                             </DataGrid>
+                        </Border>
 
-                            <Border Grid.Row="1" Background="#E3F2FD" BorderBrush="#2196F3" BorderThickness="1" CornerRadius="4" Padding="10" Margin="0,10,0,10">
-                                <TextBlock x:Name="HistoricoEstatisticasTextBlock" 
-                                          Text="{Binding HistoricoEstatisticas}" 
-                                          TextWrapping="Wrap" 
-                                          FontSize="12"/>
+                        <Border Grid.Row="1" Classes="InfoCard" Margin="0,10,0,10">
+                            <TextBlock x:Name="HistoricoEstatisticasTextBlock" Text="{Binding HistoricoEstatisticas}" TextWrapping="Wrap" FontSize="12"/>
+                        </Border>
+
+                        <UniformGrid Grid.Row="2" Columns="2">
+                            <Button Content="Exportar CSV" Classes="SecondaryButtonStyle" Command="{Binding ExportarHistoricoCommand}" Margin="0,0,5,0" Height="38"/>
+                            <Button Content="Limpar Filtros" Classes="SecondaryButtonStyle" Command="{Binding LimparFiltrosHistoricoCommand}" Height="38"/>
+                        </UniformGrid>
+                    </Grid>
+                </TabItem>
+
+                <TabItem x:Name="SobreTab" Classes="SidebarNavItem">
+                    <TabItem.Header>
+                        <TextBlock Text="Sobre"/>
+                    </TabItem.Header>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20">
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10">
+                            <Border Classes="BrandMarkWrap" Padding="12,8">
+                                <Image Source="avares://EnvioSafTApp/EnviaSaft.png" Height="72"/>
                             </Border>
+                            <TextBlock Text="EnvioSafT AT" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center"/>
+                            <TextBlock Text="{Binding AppVersion}" FontSize="14" HorizontalAlignment="Center" Classes="MutedText" Margin="0,0,0,10"/>
+                            <TextBlock Text="Aplicação para envio de ficheiros SAF-T para a Autoridade Tributária"
+                                       TextWrapping="Wrap"
+                                       TextAlignment="Center"
+                                       MaxWidth="520"/>
+                            <Button Classes="SecondaryButtonStyle" Content="loadinghappiness.com" Tag="https://loadinghappiness.com" Click="Hyperlink_Click" Margin="0,8,0,0"/>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+            </TabControl>
+        </Border>
 
-                            <UniformGrid Grid.Row="2" Columns="2">
-                                <Button Content="Exportar CSV"
-                                       Classes="SecondaryButtonStyle"
-                                       Command="{Binding ExportarHistoricoCommand}"
-                                       Margin="0,0,5,0"
-                                       Height="38"/>
-                                <Button Content="Limpar Filtros"
-                                       Classes="SecondaryButtonStyle"
-                                       Command="{Binding LimparFiltrosHistoricoCommand}"
-                                       Height="38"/>
-                            </UniformGrid>
-                        </Grid>
-                    </TabItem>
-
-                    <!-- Sobre Tab -->
-                    <TabItem x:Name="SobreTab">
-                        <TabItem.Header>
-                            <TextBlock Text="Sobre" VerticalAlignment="Center"/>
-                        </TabItem.Header>
-                        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20">
-                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                <Image Source="avares://EnvioSafTApp/EnviaSaft.png" Height="80" Margin="0,0,0,20"/>
-                                <TextBlock Text="EnvioSafT AT" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,10"/>
-                                <TextBlock Text="{Binding AppVersion}" FontSize="14" HorizontalAlignment="Center" Foreground="#666" Margin="0,0,0,30"/>
-                                
-                                <TextBlock Text="Aplicação para envio de ficheiros SAF-T para a Autoridade Tributária" 
-                                          TextWrapping="Wrap" 
-                                          TextAlignment="Center"
-                                          Margin="0,0,0,20"/>
-                                
-                                <TextBlock HorizontalAlignment="Center">
-                                    <Button Classes="SecondaryButtonStyle" Content="loadinghappiness.com" Tag="https://loadinghappiness.com" Click="Hyperlink_Click"/>
-                                </TextBlock>
-                            </StackPanel>
-                        </ScrollViewer>
-                    </TabItem>
-                </TabControl>
-            </Border>
-        </Grid>
-
-        <!-- Rodapé com Ticker -->
-        <Border Grid.Row="2" 
-                x:Name="StatusTickerBorder" 
-                Background="{Binding TickerType, Converter={StaticResource TickerTypeToColorConverter}}" 
-                Padding="15,0">
-            <Grid>
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock x:Name="StatusTickerIcon" 
-                              Text="{Binding TickerType, Converter={StaticResource TickerTypeToIconConverter}}" 
-                              FontSize="16" 
-                              Foreground="White" 
-                              Margin="0,0,10,0"
-                              VerticalAlignment="Center"/>
-                    <TextBlock x:Name="StatusTicker" 
-                              Text="{Binding TickerMessage}" 
-                              Foreground="White" 
-                              FontSize="13"
-                              VerticalAlignment="Center"/>
-                </StackPanel>
-            </Grid>
+        <Border Grid.Row="2"
+                x:Name="StatusTickerBorder"
+                Background="{Binding TickerType, Converter={StaticResource TickerTypeToColorConverter}}"
+                Padding="16,0">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="10">
+                <TextBlock x:Name="StatusTickerIcon"
+                           Text="{Binding TickerType, Converter={StaticResource TickerTypeToIconConverter}}"
+                           FontSize="16"
+                           Foreground="White"
+                           VerticalAlignment="Center"/>
+                <TextBlock x:Name="StatusTicker"
+                           Text="{Binding TickerMessage}"
+                           Foreground="White"
+                           FontSize="13"
+                           VerticalAlignment="Center"
+                           TextTrimming="CharacterEllipsis"/>
+            </StackPanel>
         </Border>
     </Grid>
 </Window>

@@ -9,6 +9,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 using EnvioSafTApp.Services.Interfaces;
 
@@ -22,14 +23,15 @@ namespace EnvioSafTApp.Services
         private readonly HttpClient _httpClient;
         private readonly string _userLibsFolder;
         private readonly string _bundleLibsFolder;
+        private readonly IReadOnlyList<string> _seedSearchFolders;
         private static readonly Regex JarExecutionRegex = new Regex(@"java\s+-jar\s+(?:(['""])(?<path>[^'""]+)\1|(?<path>[^\s]+))", RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
         public JarUpdateService()
-            : this(userLibsFolder: null, bundleLibsFolder: null, httpClient: null)
+            : this(userLibsFolder: null, bundleLibsFolder: null, httpClient: null, seedSearchFolders: null)
         {
         }
 
-        public JarUpdateService(string? userLibsFolder, string? bundleLibsFolder, HttpClient? httpClient)
+        public JarUpdateService(string? userLibsFolder, string? bundleLibsFolder, HttpClient? httpClient, IEnumerable<string>? seedSearchFolders = null)
         {
             _httpClient = httpClient ?? CreateClient();
             _userLibsFolder = string.IsNullOrWhiteSpace(userLibsFolder)
@@ -38,6 +40,10 @@ namespace EnvioSafTApp.Services
             _bundleLibsFolder = string.IsNullOrWhiteSpace(bundleLibsFolder)
                 ? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "libs")
                 : bundleLibsFolder;
+            _seedSearchFolders = (seedSearchFolders ?? GetDefaultSeedSearchFolders())
+                .Where(path => !string.IsNullOrWhiteSpace(path))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
         }
 
         private static HttpClient CreateClient()
@@ -59,123 +65,77 @@ namespace EnvioSafTApp.Services
             string metadataPath = Path.Combine(libsFolder, MetadataFileName);
             JarMetadata? metadata = await LoadMetadataAsync(metadataPath, cancellationToken);
             string jarPath = ResolveExistingJarPath(libsFolder, metadata);
+            bool existedInitially = File.Exists(jarPath);
+            bool seededFromBundle = false;
+            bool seededFromKnownLocation = false;
 
-            if (!File.Exists(jarPath))
+            if (!existedInitially)
             {
                 var seededJar = await TrySeedFromBundleAsync(libsFolder, metadataPath, cancellationToken);
                 if (!string.IsNullOrWhiteSpace(seededJar))
                 {
                     jarPath = seededJar;
+                    seededFromBundle = true;
+                }
+            }
+
+            if (!File.Exists(jarPath))
+            {
+                var discoveredJar = await TrySeedFromKnownLocationsAsync(libsFolder, metadataPath, cancellationToken);
+                if (!string.IsNullOrWhiteSpace(discoveredJar))
+                {
+                    jarPath = discoveredJar;
+                    seededFromKnownLocation = true;
                 }
             }
 
             if (File.Exists(jarPath))
             {
-                metadata = await EnsureMetadataMatchesLocalJarAsync(metadataPath, metadata, jarPath, cancellationToken);
-            }
+                await EnsureMetadataMatchesLocalJarAsync(metadataPath, metadata, jarPath, cancellationToken);
 
-            var result = new JarUpdateResult
-            {
-                JarPath = jarPath
-            };
-
-            HttpResponseMessage? response = null;
-            try
-            {
-                using var request = new HttpRequestMessage(HttpMethod.Get, JarDownloadUri);
-                if (!string.IsNullOrEmpty(metadata?.ETag))
+                var readyResult = new JarUpdateResult
                 {
-                    request.Headers.TryAddWithoutValidation("If-None-Match", metadata.ETag);
+                    Success = true,
+                    Updated = false,
+                    JarPath = jarPath,
+                    UsedFallback = !existedInitially
+                };
+
+                var fileName = Path.GetFileName(jarPath);
+                if (seededFromBundle)
+                {
+                    readyResult.Message = $"Cliente local preparado com {fileName} incluído na aplicação.";
                 }
-                else if (metadata?.LastModified is DateTimeOffset lastModified)
+                else if (seededFromKnownLocation)
                 {
-                    request.Headers.IfModifiedSince = lastModified;
-                }
-
-                response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
-
-                if (response.StatusCode == HttpStatusCode.NotModified && File.Exists(jarPath))
-                {
-                    result.Success = true;
-                    result.Updated = false;
-                    result.RemoteLastModified = metadata?.LastModified;
-
-                    if (result.RemoteLastModified.HasValue)
-                    {
-                        var data = result.RemoteLastModified.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm");
-                        result.Message = $"O {Path.GetFileName(jarPath)} já estava atualizado (última atualização em {data}).";
-                    }
-                    else
-                    {
-                        result.Message = $"O {Path.GetFileName(jarPath)} já estava atualizado.";
-                    }
-                    return result;
-                }
-
-                if (response.StatusCode == HttpStatusCode.NotModified)
-                {
-                    response.Dispose();
-                    response = await _httpClient.GetAsync(JarDownloadUri, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
-                }
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    result.Success = File.Exists(jarPath);
-                    result.UsedFallback = result.Success;
-                    result.Updated = false;
-                    string fileName = Path.GetFileName(jarPath);
-                    result.Message = result.Success
-                        ? $"⚠️ Não foi possível verificar atualizações do {fileName}; a versão existente será utilizada."
-                        : $"Não foi possível descarregar o {fileName} a partir da AT.";
-                    result.ErrorMessage = $"Falha HTTP {(int)response.StatusCode} {response.ReasonPhrase}";
-                    return result;
-                }
-
-                string savedPath = await SaveJarAsync(response, libsFolder, metadataPath, metadata, cancellationToken);
-
-                result.Success = true;
-                result.Updated = true;
-                result.JarPath = savedPath;
-                result.RemoteLastModified = response.Content.Headers.LastModified;
-
-                string savedFileName = Path.GetFileName(savedPath);
-                if (result.RemoteLastModified.HasValue)
-                {
-                    var data = result.RemoteLastModified.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm");
-                    result.Message = $"Foi descarregada a versão mais recente do {savedFileName} (atualizado em {data}).";
+                    readyResult.Message = $"Cliente local preparado com {fileName} encontrado em pasta do utilizador.";
                 }
                 else
                 {
-                    result.Message = $"Foi descarregada a versão mais recente do {savedFileName}.";
+                    readyResult.Message = $"Cliente local pronto: {fileName}. Atualizações serão geridas pelo cliente oficial da AT durante o envio.";
                 }
-                return result;
+
+                return readyResult;
             }
-            catch (Exception ex)
+
+            return new JarUpdateResult
             {
-                jarPath = ResolveExistingJarPath(libsFolder, metadata);
-                result.JarPath = jarPath;
-                if (File.Exists(jarPath))
-                {
-                    metadata = await EnsureMetadataMatchesLocalJarAsync(metadataPath, metadata, jarPath, cancellationToken);
-                }
-                result.Success = File.Exists(jarPath);
-                result.UsedFallback = result.Success;
-                result.Updated = false;
-                string fileName = Path.GetFileName(jarPath);
-                result.Message = result.Success
-                    ? $"⚠️ Não foi possível confirmar atualizações do {fileName}; a versão local será utilizada."
-                    : $"Não foi possível preparar o {fileName}. Verifique a ligação à internet ou faça a atualização manual.";
-                result.ErrorMessage = ex.Message;
-                return result;
-            }
-            finally
-            {
-                response?.Dispose();
-            }
+                Success = false,
+                Updated = false,
+                UsedFallback = false,
+                JarPath = jarPath,
+                Message = $"Não foi possível preparar o {Path.GetFileName(jarPath)}. Coloque manualmente o ficheiro oficial da AT em '{libsFolder}' ou em Downloads/Documentos/Desktop."
+            };
         }
 
         private static string ResolveExistingJarPath(string libsFolder, JarMetadata? metadata)
         {
+            string defaultPath = Path.Combine(libsFolder, DefaultJarFileName);
+            if (!Directory.Exists(libsFolder))
+            {
+                return defaultPath;
+            }
+
             if (metadata != null && !string.IsNullOrWhiteSpace(metadata.FileName))
             {
                 string candidatePath = Path.Combine(libsFolder, metadata.FileName);
@@ -185,15 +145,22 @@ namespace EnvioSafTApp.Services
                 }
             }
 
-            string defaultPath = Path.Combine(libsFolder, DefaultJarFileName);
             if (File.Exists(defaultPath))
             {
                 return defaultPath;
             }
 
-            string? firstJar = Directory.EnumerateFiles(libsFolder, "*.jar")
-                .OrderBy(f => f)
-                .FirstOrDefault();
+            string? firstJar = null;
+            try
+            {
+                firstJar = Directory.EnumerateFiles(libsFolder, "*.jar")
+                    .OrderBy(f => f)
+                    .FirstOrDefault();
+            }
+            catch
+            {
+                // Ignorar falhas de enumeração e usar caminho default.
+            }
 
             return firstJar ?? defaultPath;
         }
@@ -473,9 +440,9 @@ namespace EnvioSafTApp.Services
                 return jarPath;
             }
 
-            // Fallback para o .jar empacotado junto da app.
-            string bundleJar = ResolveExistingJarPath(GetBundleLibsFolder(), null);
-            if (File.Exists(bundleJar))
+            // Fallback para o .jar empacotado junto da app (libs ou Resources).
+            string? bundleJar = ResolveJarFromFolders(GetBundleSearchFolders());
+            if (!string.IsNullOrWhiteSpace(bundleJar) && File.Exists(bundleJar))
             {
                 return bundleJar;
             }
@@ -487,19 +454,36 @@ namespace EnvioSafTApp.Services
 
         private string GetBundleLibsFolder() => _bundleLibsFolder;
 
+        private IEnumerable<string> GetBundleSearchFolders()
+        {
+            var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+            var siblingResources = Path.GetFullPath(Path.Combine(baseDir, "..", "Resources"));
+            return new[]
+            {
+                GetBundleLibsFolder(),
+                Path.Combine(baseDir, "Resources"),
+                siblingResources
+            };
+        }
+
+        private static IEnumerable<string> GetDefaultSeedSearchFolders()
+        {
+            var userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            if (string.IsNullOrWhiteSpace(userProfile))
+            {
+                yield break;
+            }
+
+            yield return Path.Combine(userProfile, "Downloads");
+            yield return Path.Combine(userProfile, "Documents");
+            yield return Path.Combine(userProfile, "Desktop");
+        }
+
         private async Task<string?> TrySeedFromBundleAsync(string targetLibsFolder, string metadataPath, CancellationToken cancellationToken)
         {
             try
             {
-                var bundleLibs = GetBundleLibsFolder();
-                if (!Directory.Exists(bundleLibs))
-                {
-                    return null;
-                }
-
-                var sourceJar = Directory.EnumerateFiles(bundleLibs, "*.jar")
-                    .OrderBy(f => f)
-                    .FirstOrDefault();
+                var sourceJar = ResolveJarFromFolders(GetBundleSearchFolders());
 
                 if (string.IsNullOrWhiteSpace(sourceJar) || !File.Exists(sourceJar))
                 {
@@ -530,6 +514,118 @@ namespace EnvioSafTApp.Services
             {
                 return null;
             }
+        }
+
+        private async Task<string?> TrySeedFromKnownLocationsAsync(string targetLibsFolder, string metadataPath, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var options = new EnumerationOptions
+                {
+                    RecurseSubdirectories = false,
+                    IgnoreInaccessible = true,
+                    MatchCasing = MatchCasing.CaseInsensitive
+                };
+
+                var candidates = new List<string>();
+                foreach (var folder in _seedSearchFolders)
+                {
+                    if (string.IsNullOrWhiteSpace(folder) || !Directory.Exists(folder))
+                    {
+                        continue;
+                    }
+
+                    candidates.AddRange(Directory.EnumerateFiles(folder, "*.jar", options)
+                        .Where(file =>
+                        {
+                            var name = Path.GetFileName(file);
+                            return !string.IsNullOrWhiteSpace(name)
+                                && (name.Contains("envia", StringComparison.OrdinalIgnoreCase)
+                                    || name.Contains("factemi", StringComparison.OrdinalIgnoreCase)
+                                    || name.Contains("cmdclient", StringComparison.OrdinalIgnoreCase)
+                                    || name.Contains("saft", StringComparison.OrdinalIgnoreCase));
+                        }));
+                }
+
+                var selected = candidates
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .OrderByDescending(path => File.GetLastWriteTimeUtc(path))
+                    .FirstOrDefault();
+
+                if (string.IsNullOrWhiteSpace(selected) || !File.Exists(selected))
+                {
+                    return null;
+                }
+
+                return await PersistSeededJarAsync(selected, targetLibsFolder, metadataPath, cancellationToken);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private static async Task<string?> PersistSeededJarAsync(string sourceJar, string targetLibsFolder, string metadataPath, CancellationToken cancellationToken)
+        {
+            var fileName = Path.GetFileName(sourceJar);
+            if (string.IsNullOrWhiteSpace(fileName))
+            {
+                return null;
+            }
+
+            Directory.CreateDirectory(targetLibsFolder);
+            var destinationJar = Path.Combine(targetLibsFolder, fileName);
+            if (!PathsAreSame(sourceJar, destinationJar))
+            {
+                File.Copy(sourceJar, destinationJar, overwrite: true);
+            }
+
+            var metadata = new JarMetadata
+            {
+                FileName = fileName,
+                LastModified = GetFileLastWriteTimeUtc(destinationJar)
+            };
+            await SaveMetadataAsync(metadataPath, metadata, cancellationToken);
+            return destinationJar;
+        }
+
+        private static string? ResolveJarFromFolders(IEnumerable<string> folders)
+        {
+            foreach (var folder in folders.Where(f => !string.IsNullOrWhiteSpace(f)))
+            {
+                if (!Directory.Exists(folder))
+                {
+                    continue;
+                }
+
+                var jar = Directory.EnumerateFiles(folder, "*.jar")
+                    .OrderByDescending(path => ScoreJarName(Path.GetFileName(path)))
+                    .ThenByDescending(File.GetLastWriteTimeUtc)
+                    .FirstOrDefault();
+
+                if (!string.IsNullOrWhiteSpace(jar) && File.Exists(jar))
+                {
+                    return jar;
+                }
+            }
+
+            return null;
+        }
+
+        private static int ScoreJarName(string? fileName)
+        {
+            if (string.IsNullOrWhiteSpace(fileName))
+            {
+                return 0;
+            }
+
+            var name = fileName.ToLowerInvariant();
+            var score = 0;
+            if (name.Contains("envia")) score += 3;
+            if (name.Contains("saft")) score += 3;
+            if (name.Contains("factemi")) score += 3;
+            if (name.Contains("cmdclient")) score += 2;
+            return score;
         }
 
         private static JarMetadata? LoadMetadata(string metadataPath)

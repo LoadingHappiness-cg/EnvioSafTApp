@@ -11,6 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Schema;
+using System.Xml.Linq;
 
 namespace EnvioSafTApp.Services
 {
@@ -24,8 +25,11 @@ namespace EnvioSafTApp.Services
         private static readonly Regex AssertElementRegex = new(
             @"<(?:[A-Za-z_][\w\-.]*:)?assert\b[^>]*(?:/>|>[\s\S]*?</(?:[A-Za-z_][\w\-.]*:)?assert>)",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private const string XmlSchemaNamespace = "http://www.w3.org/2001/XMLSchema";
+        private const string XmlSchemaVersioningNamespace = "http://www.w3.org/2007/XMLSchema-versioning";
 
         private readonly string _schemaFilePath;
+        private readonly string _bundleSchemaFilePath;
         private readonly HttpClient _httpClient;
         private readonly IReadOnlyList<string> _xsdUrls;
 
@@ -34,13 +38,16 @@ namespace EnvioSafTApp.Services
         {
         }
 
-        public SaftValidationService(string? schemaFilePath, IEnumerable<string>? xsdUrls, HttpClient? httpClient)
+        public SaftValidationService(string? schemaFilePath, IEnumerable<string>? xsdUrls, HttpClient? httpClient, string? bundleSchemaFilePath = null)
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             var baseFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "EnviaSaft");
             _schemaFilePath = string.IsNullOrWhiteSpace(schemaFilePath)
                 ? Path.Combine(baseFolder, "schemas", "SAFTPT1.04_01.xsd")
                 : schemaFilePath;
+            _bundleSchemaFilePath = string.IsNullOrWhiteSpace(bundleSchemaFilePath)
+                ? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "schemas", "SAFTPT1.04_01.xsd")
+                : bundleSchemaFilePath;
             _httpClient = httpClient ?? new HttpClient();
             _xsdUrls = (xsdUrls ?? DefaultXsdUrls)
                 .Where(url => !string.IsNullOrWhiteSpace(url))
@@ -217,6 +224,22 @@ namespace EnvioSafTApp.Services
                 }
             }
 
+            if (File.Exists(_bundleSchemaFilePath))
+            {
+                try
+                {
+                    await CopySanitizedSchemaAsync(_bundleSchemaFilePath, _schemaFilePath, cancellationToken);
+                    if (TryCompilarSchema(_schemaFilePath))
+                    {
+                        return _schemaFilePath;
+                    }
+                }
+                catch
+                {
+                    // Ignorar fallback local e tentar download.
+                }
+            }
+
             foreach (var url in _xsdUrls)
             {
                 try
@@ -233,19 +256,8 @@ namespace EnvioSafTApp.Services
                         continue;
                     }
 
-                    var schemaContent = DecodeSchema(bytes, out var schemaEncoding);
-                    var stripped = AssertElementRegex.Replace(schemaContent, string.Empty);
-
-                    if (string.IsNullOrWhiteSpace(stripped))
-                    {
-                        continue;
-                    }
-
-                    var targetEncoding = schemaEncoding ?? Encoding.UTF8;
                     var candidatePath = _schemaFilePath + ".download";
-                    var candidateBytes = targetEncoding.GetBytes(stripped);
-
-                    await File.WriteAllBytesAsync(candidatePath, candidateBytes, cancellationToken);
+                    await WriteSanitizedSchemaAsync(bytes, candidatePath, cancellationToken);
 
                     if (!TryCompilarSchema(candidatePath))
                     {
@@ -264,6 +276,94 @@ namespace EnvioSafTApp.Services
             }
 
             return null;
+        }
+
+        private static async Task CopySanitizedSchemaAsync(string sourcePath, string destinationPath, CancellationToken cancellationToken)
+        {
+            var bytes = await File.ReadAllBytesAsync(sourcePath, cancellationToken);
+            await WriteSanitizedSchemaAsync(bytes, destinationPath, cancellationToken);
+        }
+
+        private static async Task WriteSanitizedSchemaAsync(byte[] bytes, string destinationPath, CancellationToken cancellationToken)
+        {
+            var schemaContent = DecodeSchema(bytes, out _);
+            var sanitizedBytes = SanitizeSchemaToUtf8Bytes(schemaContent);
+            await File.WriteAllBytesAsync(destinationPath, sanitizedBytes, cancellationToken);
+        }
+
+        private static byte[] SanitizeSchemaToUtf8Bytes(string schemaContent)
+        {
+            var normalized = schemaContent.TrimStart('\uFEFF', ' ', '\t', '\r', '\n');
+            try
+            {
+                var document = XDocument.Parse(normalized, LoadOptions.PreserveWhitespace);
+                var schemaNs = XNamespace.Get(XmlSchemaNamespace);
+                var vcNs = XNamespace.Get(XmlSchemaVersioningNamespace);
+
+                document
+                    .Descendants(schemaNs + "assert")
+                    .ToList()
+                    .ForEach(node => node.Remove());
+
+                foreach (var allGroup in document.Descendants(schemaNs + "all"))
+                {
+                    foreach (var particle in allGroup.Elements())
+                    {
+                        var maxOccurs = particle.Attribute("maxOccurs");
+                        if (maxOccurs != null && maxOccurs.Value != "0" && maxOccurs.Value != "1")
+                        {
+                            maxOccurs.Value = "1";
+                        }
+
+                        var minOccurs = particle.Attribute("minOccurs");
+                        if (minOccurs != null && minOccurs.Value != "0" && minOccurs.Value != "1")
+                        {
+                            minOccurs.Value = "1";
+                        }
+                    }
+                }
+
+                var root = document.Root;
+                root?.Attribute(vcNs + "minVersion")?.Remove();
+
+                var declaration = document.Declaration;
+                if (declaration == null)
+                {
+                    declaration = new XDeclaration("1.0", "utf-8", null);
+                    document.Declaration = declaration;
+                }
+
+                using var ms = new MemoryStream();
+                var settings = new XmlWriterSettings
+                {
+                    Encoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false),
+                    OmitXmlDeclaration = false,
+                    Indent = false,
+                    NewLineHandling = NewLineHandling.None
+                };
+
+                using (var writer = XmlWriter.Create(ms, settings))
+                {
+                    document.Save(writer);
+                }
+
+                return ms.ToArray();
+            }
+            catch
+            {
+                // Fallback para regex caso o parser XML falhe por algum detalhe de encoding/conteúdo.
+                var withoutAssert = AssertElementRegex.Replace(normalized, string.Empty);
+                var withDecl = withoutAssert.StartsWith("<?xml", StringComparison.OrdinalIgnoreCase)
+                    ? withoutAssert
+                    : $"<?xml version=\"1.0\" encoding=\"utf-8\"?>{withoutAssert}";
+
+                if (string.IsNullOrWhiteSpace(withDecl))
+                {
+                    throw new InvalidOperationException("Conteúdo do schema inválido.");
+                }
+
+                return new UTF8Encoding(encoderShouldEmitUTF8Identifier: false).GetBytes(withDecl);
+            }
         }
 
         private static bool TryCompilarSchema(string schemaPath)

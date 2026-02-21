@@ -3,6 +3,7 @@
 
     <Application.Styles>
         <FluentTheme />
+        <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>
         <StyleInclude Source="avares://EnvioSafTApp/Resources/styles.xaml"/>
     </Application.Styles>
 

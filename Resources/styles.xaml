@@ -1,22 +1,148 @@
 <Styles xmlns="https://github.com/avaloniaui"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <Design.PreviewWith>
-        <Border Padding="20">
-            <!-- Add Controls for Previewer Here -->
-        </Border>
-    </Design.PreviewWith>
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <Styles.Resources>
-        <SolidColorBrush x:Key="PrimaryColorBrush" Color="#0A84FF"/>
-        <SolidColorBrush x:Key="PrimaryHoverBrush" Color="#0066CC"/>
-        <SolidColorBrush x:Key="PrimaryForegroundBrush" Color="White"/>
-        <SolidColorBrush x:Key="TextBoxBorderBrush" Color="#CDD4DF"/>
-        <SolidColorBrush x:Key="TextBoxFocusBorderBrush" Color="#0A84FF"/>
-        <SolidColorBrush x:Key="CardBorderBrush" Color="#D8DEE8"/>
-        <SolidColorBrush x:Key="CardBackgroundBrush" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="AppBgStart" Color="#EAF1FB"/>
+        <SolidColorBrush x:Key="AppBgEnd" Color="#DCE7F6"/>
+        <SolidColorBrush x:Key="GlassSurfaceBrush" Color="#EEF5FF" Opacity="0.76"/>
+        <SolidColorBrush x:Key="GlassStrongBrush" Color="#F7FBFF" Opacity="0.9"/>
+        <SolidColorBrush x:Key="GlassBorderBrush" Color="#FFFFFF" Opacity="0.62"/>
+        <SolidColorBrush x:Key="HairlineBrush" Color="#C8D5E8"/>
+        <SolidColorBrush x:Key="PrimaryColorBrush" Color="#0B75EE"/>
+        <SolidColorBrush x:Key="PrimaryHoverBrush" Color="#045FC2"/>
+        <SolidColorBrush x:Key="PrimaryForegroundBrush" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="TextPrimaryBrush" Color="#1D2A3B"/>
+        <SolidColorBrush x:Key="TextMutedBrush" Color="#5F6F86"/>
     </Styles.Resources>
 
-    <!-- Botão Primário -->
+    <Style Selector="Window">
+        <Setter Property="FontFamily" Value="Avenir Next, SF Pro Text, Helvetica Neue, Segoe UI"/>
+        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+    </Style>
+
+    <Style Selector="Grid.WindowRootSurface">
+        <Setter Property="Background">
+            <Setter.Value>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="#F4F8FF" Offset="0"/>
+                    <GradientStop Color="#E4ECF9" Offset="0.56"/>
+                    <GradientStop Color="#DCE7F6" Offset="1"/>
+                </LinearGradientBrush>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style Selector="Border.TopGlassBar">
+        <Setter Property="Background" Value="{StaticResource GlassSurfaceBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource GlassBorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="18"/>
+        <Setter Property="BoxShadow" Value="0 12 32 0 #2B5B9044"/>
+    </Style>
+
+    <Style Selector="Border.AppShell">
+        <Setter Property="Background" Value="{StaticResource GlassStrongBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource GlassBorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="20"/>
+        <Setter Property="BoxShadow" Value="0 16 36 0 #254F8A30"/>
+    </Style>
+
+    <Style Selector="Border.BrandMarkWrap">
+        <Setter Property="Background" Value="#CCFFFFFF"/>
+        <Setter Property="BorderBrush" Value="#90FFFFFF"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="12"/>
+    </Style>
+
+    <Style Selector="TextBlock.TopTitleText">
+        <Setter Property="FontSize" Value="18"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+
+    <Style Selector="TextBlock.TopSubtitleText">
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
+    </Style>
+
+    <Style Selector="Border.VersionChip">
+        <Setter Property="Background" Value="#EAF4FF"/>
+        <Setter Property="BorderBrush" Value="#C8DCF2"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="12"/>
+        <Setter Property="Padding" Value="14,8"/>
+    </Style>
+
+    <Style Selector="TextBlock.VersionText">
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="#27466A"/>
+    </Style>
+
+    <Style Selector="TabControl.MacMainTabs">
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="Padding" Value="4"/>
+    </Style>
+
+    <Style Selector="TabControl.MacMainTabs > TabStrip">
+        <Setter Property="Width" Value="220"/>
+        <Setter Property="Background" Value="#ECF4FF"/>
+        <Setter Property="BorderBrush" Value="#C8D9EC"/>
+        <Setter Property="BorderThickness" Value="0,0,1,0"/>
+        <Setter Property="Padding" Value="10"/>
+        <Setter Property="Margin" Value="0,0,8,0"/>
+    </Style>
+
+    <Style Selector="TabControl.MacMainTabs TabItem.SidebarNavItem">
+        <Setter Property="Margin" Value="0,0,0,6"/>
+        <Setter Property="Padding" Value="14,11"/>
+        <Setter Property="Foreground" Value="#2A3A4E"/>
+        <Setter Property="FontSize" Value="15"/>
+        <Setter Property="CornerRadius" Value="11"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="FontWeight" Value="Medium"/>
+    </Style>
+
+    <Style Selector="TabControl.MacMainTabs TabItem.SidebarNavItem:pointerover">
+        <Setter Property="Background" Value="#F6FBFF"/>
+    </Style>
+
+    <Style Selector="TabControl.MacMainTabs TabItem.SidebarNavItem:selected">
+        <Setter Property="Background" Value="#EAF4FF"/>
+        <Setter Property="Foreground" Value="#0466D1"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+
+    <Style Selector="Border.ModernGroupBoxStyle">
+        <Setter Property="Padding" Value="12"/>
+        <Setter Property="Background" Value="#FAFCFF"/>
+        <Setter Property="BorderBrush" Value="#D5E1F0"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="14"/>
+    </Style>
+
+    <Style Selector="TextBlock.SectionTitle">
+        <Setter Property="FontSize" Value="19"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="#1F2B3D"/>
+    </Style>
+
+    <Style Selector="TextBlock.FieldLabel">
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="#4D5D74"/>
+    </Style>
+
+    <Style Selector="TextBlock.AccentSummaryText">
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="#0A68D3"/>
+    </Style>
+
+    <Style Selector="TextBlock.MutedText">
+        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
+    </Style>
+
     <Style Selector="Button.PrimaryButtonStyle">
         <Setter Property="Background" Value="{StaticResource PrimaryColorBrush}"/>
         <Setter Property="Foreground" Value="{StaticResource PrimaryForegroundBrush}"/>
@@ -29,183 +155,169 @@
         <Setter Property="HorizontalContentAlignment" Value="Center"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
     </Style>
+
     <Style Selector="Button.PrimaryButtonStyle:pointerover /template/ ContentPresenter#PART_ContentPresenter">
         <Setter Property="Background" Value="{StaticResource PrimaryHoverBrush}"/>
     </Style>
 
-    <!-- Botão ModernSendButtonStyle -->
     <Style Selector="Button.ModernSendButtonStyle">
-        <Setter Property="Height" Value="54"/>
-        <Setter Property="MinWidth" Value="220"/>
-        <Setter Property="FontSize" Value="15"/>
-        <Setter Property="FontWeight" Value="Bold"/>
-        <Setter Property="Padding" Value="24,8"/>
-        <Setter Property="Background">
-            <Setter.Value>
-                <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                    <GradientStop Color="#2CA8FF" Offset="0"/>
-                    <GradientStop Color="#0A84FF" Offset="1"/>
-                </LinearGradientBrush>
-            </Setter.Value>
-        </Setter>
+        <Setter Property="Height" Value="46"/>
+        <Setter Property="MinWidth" Value="170"/>
+        <Setter Property="Padding" Value="22,8"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
         <Setter Property="Foreground" Value="White"/>
+        <Setter Property="CornerRadius" Value="13"/>
         <Setter Property="BorderThickness" Value="0"/>
-        <Setter Property="CornerRadius" Value="14"/>
-        <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="HorizontalContentAlignment" Value="Center"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
-    </Style>
-    <Style Selector="Button.ModernSendButtonStyle:pointerover">
-        <Setter Property="RenderTransform" Value="scale(1.03)"/>
-    </Style>
-    <Style Selector="Button.ModernSendButtonStyle:pressed">
-        <Setter Property="RenderTransform" Value="scale(0.98)"/>
-        <Setter Property="Opacity" Value="0.95"/>
-    </Style>
-    <Style Selector="Button.ModernSendButtonStyle:disabled">
-        <Setter Property="Opacity" Value="0.85"/>
-        <Setter Property="Cursor" Value="Arrow"/>
-    </Style>
-    <Style Selector="Button.ModernSendButtonStyle:pointerover /template/ ContentPresenter#PART_ContentPresenter">
         <Setter Property="Background">
             <Setter.Value>
-                <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                    <GradientStop Color="#53B7FF" Offset="0"/>
-                    <GradientStop Color="#0A84FF" Offset="1"/>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="#3AA0FF" Offset="0"/>
+                    <GradientStop Color="#0A7CFF" Offset="1"/>
                 </LinearGradientBrush>
             </Setter.Value>
         </Setter>
     </Style>
 
+    <Style Selector="Button.ModernSendButtonStyle:pointerover">
+        <Setter Property="RenderTransform" Value="scale(1.02)"/>
+    </Style>
 
-    <!-- Botão Secundário -->
+    <Style Selector="Button.ModernSendButtonStyle:pressed">
+        <Setter Property="RenderTransform" Value="scale(0.98)"/>
+    </Style>
+
     <Style Selector="Button.SecondaryButtonStyle">
-        <Setter Property="Background" Value="White"/>
-        <Setter Property="Foreground" Value="#0A84FF"/>
-        <Setter Property="BorderBrush" Value="#0A84FF"/>
+        <Setter Property="Background" Value="#F4F8FD"/>
+        <Setter Property="Foreground" Value="#0B67CF"/>
+        <Setter Property="BorderBrush" Value="#BFD4EA"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
         <Setter Property="Padding" Value="12,7"/>
         <Setter Property="CornerRadius" Value="10"/>
-        <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="HorizontalContentAlignment" Value="Center"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
     </Style>
+
     <Style Selector="Button.SecondaryButtonStyle:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-        <Setter Property="Background" Value="#E3F2FD"/>
-    </Style>
-    <Style Selector="Button.SecondaryButtonStyle:pressed /template/ ContentPresenter#PART_ContentPresenter">
-        <Setter Property="Background" Value="#BBDEFB"/>
+        <Setter Property="Background" Value="#EBF4FF"/>
     </Style>
 
-    <!-- Botão ModernIconButtonStyle -->
     <Style Selector="Button.ModernIconButtonStyle">
-        <Setter Property="Background" Value="#0A84FF"/>
+        <Setter Property="Background" Value="#0A7CFF"/>
         <Setter Property="Foreground" Value="White"/>
-        <Setter Property="FontWeight" Value="Bold"/>
-        <Setter Property="BorderBrush" Value="#0A84FF"/>
-        <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="Padding" Value="0"/>
-        <Setter Property="Margin" Value="0"/>
+        <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="CornerRadius" Value="10"/>
-        <Setter Property="Cursor" Value="Hand"/>
-        <Setter Property="HorizontalAlignment" Value="Center"/>
-        <Setter Property="VerticalAlignment" Value="Center"/>
-        <Setter Property="HorizontalContentAlignment" Value="Center"/>
-        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
     </Style>
 
-    <!-- TextBox -->
     <Style Selector="TextBox.ModernTextBoxStyle">
-        <Setter Property="Margin" Value="0,0,0,8"/>
-        <Setter Property="Padding" Value="10,6"/>
-        <Setter Property="BorderBrush" Value="{StaticResource TextBoxBorderBrush}"/>
+        <Setter Property="Padding" Value="10,7"/>
+        <Setter Property="BorderBrush" Value="#C6D6E8"/>
         <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="FontSize" Value="14"/>
-        <Setter Property="Background" Value="White"/>
-        <Setter Property="CornerRadius" Value="9"/>
-    </Style>
-    <Style Selector="TextBox.ModernTextBoxStyle:focus /template/ Border#PART_BorderElement">
-        <Setter Property="BorderBrush" Value="{StaticResource TextBoxFocusBorderBrush}"/>
+        <Setter Property="Background" Value="#FCFEFF"/>
+        <Setter Property="CornerRadius" Value="10"/>
     </Style>
 
-    <!-- PasswordBox -->
+    <Style Selector="TextBox.ModernTextBoxStyle:focus /template/ Border#PART_BorderElement">
+        <Setter Property="BorderBrush" Value="#0A7CFF"/>
+    </Style>
+
     <Style Selector="TextBox.ModernPasswordBoxStyle">
         <Setter Property="PasswordChar" Value="●"/>
-        <Setter Property="Margin" Value="0,0,0,8"/>
-        <Setter Property="Padding" Value="10,6"/>
-        <Setter Property="BorderBrush" Value="{StaticResource TextBoxBorderBrush}"/>
+        <Setter Property="Padding" Value="10,7"/>
+        <Setter Property="BorderBrush" Value="#C6D6E8"/>
         <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="FontSize" Value="14"/>
-        <Setter Property="Background" Value="White"/>
-        <Setter Property="CornerRadius" Value="9"/>
+        <Setter Property="Background" Value="#FCFEFF"/>
+        <Setter Property="CornerRadius" Value="10"/>
     </Style>
+
     <Style Selector="TextBox.ModernPasswordBoxStyle:focus /template/ Border#PART_BorderElement">
-        <Setter Property="BorderBrush" Value="{StaticResource TextBoxFocusBorderBrush}"/>
+        <Setter Property="BorderBrush" Value="#0A7CFF"/>
     </Style>
 
-    <!-- ComboBox -->
     <Style Selector="ComboBox.ModernComboBoxStyle">
+        <Setter Property="Padding" Value="10,7"/>
+        <Setter Property="BorderBrush" Value="#C6D6E8"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Background" Value="#FCFEFF"/>
+        <Setter Property="CornerRadius" Value="10"/>
+    </Style>
+
+    <Style Selector="Border.CheckItemCard">
+        <Setter Property="Padding" Value="10"/>
         <Setter Property="Margin" Value="0,0,0,8"/>
-        <Setter Property="FontSize" Value="14"/>
-        <Setter Property="Padding" Value="10,6"/>
-        <Setter Property="BorderBrush" Value="{StaticResource TextBoxBorderBrush}"/>
+        <Setter Property="Background" Value="#F4F9FF"/>
+        <Setter Property="BorderBrush" Value="#D4E1F0"/>
         <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="Background" Value="White"/>
-        <Setter Property="CornerRadius" Value="9"/>
+        <Setter Property="CornerRadius" Value="10"/>
     </Style>
 
-    <!-- GroupBox using avalonia's HeaderedContentControl or experimental border -->
-    <Style Selector="Border.ModernGroupBoxStyle">
-        <Setter Property="Margin" Value="0,0,0,12"/>
-        <Setter Property="Padding" Value="12"/>
-        <Setter Property="BorderBrush" Value="{StaticResource CardBorderBrush}"/>
+    <Style Selector="Border.IssuesPanel">
+        <Setter Property="Background" Value="#F3F7FC"/>
+        <Setter Property="BorderBrush" Value="#D6E2F0"/>
         <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="Background" Value="{StaticResource CardBackgroundBrush}"/>
-        <Setter Property="CornerRadius" Value="12"/>
+        <Setter Property="CornerRadius" Value="10"/>
+        <Setter Property="Padding" Value="8"/>
     </Style>
 
-    <Style Selector="TabControl#RightTabControl">
-        <Setter Property="FontSize" Value="14"/>
-        <Setter Property="Padding" Value="2"/>
-    </Style>
-
-    <Style Selector="TabControl#RightTabControl TabItem">
-        <Setter Property="Margin" Value="0,0,0,6"/>
-        <Setter Property="Padding" Value="10,8"/>
-        <Setter Property="Foreground" Value="#4A5568"/>
-        <Setter Property="Background" Value="Transparent"/>
+    <Style Selector="Border.IssueItemCard">
+        <Setter Property="Padding" Value="10"/>
+        <Setter Property="Margin" Value="0,0,0,8"/>
+        <Setter Property="Background" Value="#FFFFFF"/>
+        <Setter Property="BorderBrush" Value="#DCE6F2"/>
+        <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="CornerRadius" Value="8"/>
-        <Setter Property="HorizontalAlignment" Value="Stretch"/>
-        <Setter Property="FontSize" Value="12"/>
     </Style>
 
-    <Style Selector="TabControl#RightTabControl TabItem:pointerover">
-        <Setter Property="Background" Value="#F5F8FC"/>
-        <Setter Property="Foreground" Value="#2D3748"/>
+    <Style Selector="TextBlock.HelpTitle">
+        <Setter Property="FontSize" Value="22"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="#0A68D3"/>
     </Style>
 
-    <Style Selector="TabControl#RightTabControl TabItem:selected">
-        <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="Foreground" Value="#0A84FF"/>
+    <Style Selector="Border.WarningCard">
+        <Setter Property="Background" Value="#EEF3FA"/>
+        <Setter Property="BorderBrush" Value="#CBD8E8"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="10"/>
+        <Setter Property="Padding" Value="12"/>
+    </Style>
+
+    <Style Selector="Border.SuccessCard">
+        <Setter Property="Background" Value="#EAF9EF"/>
+        <Setter Property="BorderBrush" Value="#8FD3A2"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="10"/>
+        <Setter Property="Padding" Value="12"/>
+    </Style>
+
+    <Style Selector="Border.InfoCard">
+        <Setter Property="Background" Value="#EAF3FF"/>
+        <Setter Property="BorderBrush" Value="#AFCBED"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="10"/>
+        <Setter Property="Padding" Value="10"/>
+    </Style>
+
+    <Style Selector="DataGrid">
+        <Setter Property="Background" Value="#FCFEFF"/>
+        <Setter Property="Foreground" Value="#1D2A3B"/>
+        <Setter Property="BorderBrush" Value="#D4E0EF"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="RowBackground" Value="#FFFFFF"/>
+        <Setter Property="GridLinesVisibility" Value="Horizontal"/>
+    </Style>
+
+    <Style Selector="DataGridColumnHeader">
+        <Setter Property="Background" Value="#EAF3FF"/>
+        <Setter Property="Foreground" Value="#244567"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
     </Style>
 
-    <Style Selector="TabControl#RightTabControl TabItem:selected /template/ ContentPresenter">
-        <Setter Property="Background" Value="#EEF5FF"/>
-        <Setter Property="BorderBrush" Value="#0A84FF"/>
-        <Setter Property="BorderThickness" Value="3,0,0,0"/>
+    <Style Selector="DataGridRow">
+        <Setter Property="Foreground" Value="#1D2A3B"/>
     </Style>
-
-    <!-- TextBlock -->
-    <Style Selector="TextBlock.HelpHeaderTextStyle">
-        <Setter Property="FontSize" Value="14"/>
-        <Setter Property="FontWeight" Value="SemiBold"/>
-        <Setter Property="Foreground" Value="#1E88E5"/>
-        <Setter Property="TextWrapping" Value="Wrap"/>
-        <Setter Property="Margin" Value="10,10,10,20"/>
-        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
-        <Setter Property="LineHeight" Value="20"/>
-    </Style>
-
 </Styles>
