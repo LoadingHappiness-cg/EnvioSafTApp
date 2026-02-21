@@ -276,11 +276,9 @@ namespace EnvioSafTApp.ViewModels
                     SaftValidationSugestoes.Add(sugestao);
                 }
 
-                var tickerType = resultado.Sucesso
-                    ? TickerMessageType.Success
-                    : resultado.EsquemaDisponivel
-                        ? TickerMessageType.Warning
-                        : TickerMessageType.Error;
+                var tickerType = resultado.EsquemaDisponivel
+                    ? (resultado.Sucesso ? TickerMessageType.Success : TickerMessageType.Warning)
+                    : (resultado.Sucesso ? TickerMessageType.Warning : TickerMessageType.Error);
 
                 var tickerMessage = resultado.MensagemEstado ?? resultado.Resumo;
                 ShowTicker(tickerMessage, tickerType);

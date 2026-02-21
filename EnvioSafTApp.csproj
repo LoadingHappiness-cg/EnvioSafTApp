@@ -2,25 +2,24 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows</TargetFramework>
-    <UseWPF>true</UseWPF>
+    <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
   </PropertyGroup>
 
-	<PropertyGroup>
-		<Version>1.1.0</Version>
-		<AssemblyVersion>1.1.0.0</AssemblyVersion>
-		<FileVersion>1.1.0.0</FileVersion>
-		<ApplicationIcon>Assets\EnviaSaft.ico</ApplicationIcon>
-	</PropertyGroup>
+  <PropertyGroup>
+    <Version>1.1.2</Version>
+    <AssemblyVersion>1.1.2.0</AssemblyVersion>
+    <FileVersion>1.1.2.0</FileVersion>
+    <ApplicationIcon>Assets\EnviaSaft.ico</ApplicationIcon>
+  </PropertyGroup>
 
-	<ItemGroup>
-	  <None Remove="Assets\EnviaSaft.ico" />
-	  <None Remove="EnviaSaft.png" />
-	</ItemGroup>
-	
+  <ItemGroup>
+    <None Remove="Assets\EnviaSaft.ico" />
+    <None Remove="EnviaSaft.png" />
+  </ItemGroup>
+
   <ItemGroup>
     <Content Include="Assets\EnviaSaft.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -29,18 +28,19 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-	
+
   <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.3.12" />
     <PackageReference Include="SharpCompress" Version="0.39.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
   </ItemGroup>
 
-	<ItemGroup>
-		<Resource Include="Assets\loading-logo.png">
-		  <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-		</Resource>
-		<Resource Include="EnviaSaft.png" />
-	</ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\loading-logo.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="EnviaSaft.png" />
+  </ItemGroup>
 
 </Project>

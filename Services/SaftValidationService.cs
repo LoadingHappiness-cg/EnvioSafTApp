@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,18 +16,35 @@ namespace EnvioSafTApp.Services
 {
     public class SaftValidationService : ISaftValidationService
     {
-        private static readonly HttpClient HttpClient = new();
-        private static readonly string[] XsdUrls = new[]
+        private static readonly string[] DefaultXsdUrls = new[]
         {
             "https://info.portaldasfinancas.gov.pt/apps/saft-pt04/saftpt1.04_01.xsd"
         };
 
+        private static readonly Regex AssertElementRegex = new(
+            @"<(?:[A-Za-z_][\w\-.]*:)?assert\b[^>]*(?:/>|>[\s\S]*?</(?:[A-Za-z_][\w\-.]*:)?assert>)",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
         private readonly string _schemaFilePath;
+        private readonly HttpClient _httpClient;
+        private readonly IReadOnlyList<string> _xsdUrls;
 
         public SaftValidationService()
+            : this(schemaFilePath: null, xsdUrls: null, httpClient: null)
         {
+        }
+
+        public SaftValidationService(string? schemaFilePath, IEnumerable<string>? xsdUrls, HttpClient? httpClient)
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             var baseFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "EnviaSaft");
-            _schemaFilePath = Path.Combine(baseFolder, "schemas", "SAFTPT1.04_01.xsd");
+            _schemaFilePath = string.IsNullOrWhiteSpace(schemaFilePath)
+                ? Path.Combine(baseFolder, "schemas", "SAFTPT1.04_01.xsd")
+                : schemaFilePath;
+            _httpClient = httpClient ?? new HttpClient();
+            _xsdUrls = (xsdUrls ?? DefaultXsdUrls)
+                .Where(url => !string.IsNullOrWhiteSpace(url))
+                .ToArray();
         }
 
         public async Task<SaftValidationResult> ValidateAsync(string caminhoSafT, CancellationToken cancellationToken)
@@ -64,7 +82,7 @@ namespace EnvioSafTApp.Services
                     schemas.Add(null, schemaPath);
                     schemas.Compile();
                 }
-                catch (Exception ex)
+                catch
                 {
                     // Se o schema falhar ao compilar, continuamos sem validação de schema
                     resultado.EsquemaDisponivel = false;
@@ -169,56 +187,166 @@ namespace EnvioSafTApp.Services
 
         private async Task<string?> GarantirSchemaAsync(CancellationToken cancellationToken)
         {
-            try
+            var folder = Path.GetDirectoryName(_schemaFilePath);
+            if (!string.IsNullOrWhiteSpace(folder))
             {
-                var folder = Path.GetDirectoryName(_schemaFilePath);
-                if (!string.IsNullOrWhiteSpace(folder))
-                {
-                    Directory.CreateDirectory(folder);
-                }
-
-                if (File.Exists(_schemaFilePath))
-                {
-                    // Se o ficheiro existe e tem conteúdo, tentamos usá-lo mesmo se tiver problemas
-                    var fileInfo = new FileInfo(_schemaFilePath);
-                    if (fileInfo.Length > 1000) // Ficheiro XSD válido deve ter pelo menos 1KB
-                    {
-                        return _schemaFilePath;
-                    }
-                }
-            }
-            catch
-            {
-                // Ignorar e tentar download
+                Directory.CreateDirectory(folder);
             }
 
-            foreach (var url in XsdUrls)
+            if (File.Exists(_schemaFilePath))
             {
                 try
                 {
-                    var bytes = await HttpClient.GetByteArrayAsync(url, cancellationToken);
-                    if (bytes == null || bytes.Length == 0)
+                    var fileInfo = new FileInfo(_schemaFilePath);
+                    if (fileInfo.Length > 100)
+                    {
+                        if (await RemoverAssertDoSchemaAsync(_schemaFilePath, cancellationToken))
+                        {
+                            // Schema foi reescrito localmente sem asserts.
+                        }
+
+                        if (TryCompilarSchema(_schemaFilePath))
+                        {
+                            return _schemaFilePath;
+                        }
+                    }
+                }
+                catch
+                {
+                    // Ignorar e tentar download.
+                }
+            }
+
+            foreach (var url in _xsdUrls)
+            {
+                try
+                {
+                    using var response = await _httpClient.GetAsync(url, cancellationToken);
+                    if (!response.IsSuccessStatusCode)
                     {
                         continue;
                     }
 
-                    var folder = Path.GetDirectoryName(_schemaFilePath);
-                    if (!string.IsNullOrWhiteSpace(folder) && !Directory.Exists(folder))
+                    var bytes = await response.Content.ReadAsByteArrayAsync(cancellationToken);
+                    if (bytes.Length == 0)
                     {
-                        Directory.CreateDirectory(folder);
+                        continue;
                     }
 
-                    await File.WriteAllBytesAsync(_schemaFilePath, bytes, cancellationToken);
+                    var schemaContent = DecodeSchema(bytes, out var schemaEncoding);
+                    var stripped = AssertElementRegex.Replace(schemaContent, string.Empty);
+
+                    if (string.IsNullOrWhiteSpace(stripped))
+                    {
+                        continue;
+                    }
+
+                    var targetEncoding = schemaEncoding ?? Encoding.UTF8;
+                    var candidatePath = _schemaFilePath + ".download";
+                    var candidateBytes = targetEncoding.GetBytes(stripped);
+
+                    await File.WriteAllBytesAsync(candidatePath, candidateBytes, cancellationToken);
+
+                    if (!TryCompilarSchema(candidatePath))
+                    {
+                        File.Delete(candidatePath);
+                        continue;
+                    }
+
+                    File.Move(candidatePath, _schemaFilePath, true);
                     return _schemaFilePath;
                 }
-                catch (Exception ex)
+                catch
                 {
-                    // Log mas continua a tentar
+                    // Ignorar erro deste endpoint e tentar o próximo.
                     continue;
                 }
             }
 
             return null;
+        }
+
+        private static bool TryCompilarSchema(string schemaPath)
+        {
+            var schemas = new XmlSchemaSet();
+            schemas.Add(null, schemaPath);
+            schemas.Compile();
+            return true;
+        }
+
+        private static string DecodeSchema(byte[] bytes, out Encoding? detectedEncoding)
+        {
+            detectedEncoding = DetectXmlEncoding(bytes);
+            if (detectedEncoding != null)
+            {
+                return detectedEncoding.GetString(bytes);
+            }
+
+            try
+            {
+                detectedEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
+                return detectedEncoding.GetString(bytes);
+            }
+            catch (DecoderFallbackException)
+            {
+                detectedEncoding = Encoding.GetEncoding("Windows-1252");
+                return detectedEncoding.GetString(bytes);
+            }
+        }
+
+        private static Encoding? DetectXmlEncoding(byte[] bytes)
+        {
+            var headerLength = Math.Min(bytes.Length, 512);
+            if (headerLength <= 0)
+            {
+                return null;
+            }
+
+            var header = Encoding.ASCII.GetString(bytes, 0, headerLength);
+            var match = Regex.Match(header, @"encoding\s*=\s*[""'](?<enc>[^""']+)[""']", RegexOptions.IgnoreCase);
+            if (!match.Success)
+            {
+                return null;
+            }
+
+            var encodingName = match.Groups["enc"].Value;
+            if (string.IsNullOrWhiteSpace(encodingName))
+            {
+                return null;
+            }
+
+            try
+            {
+                return Encoding.GetEncoding(encodingName);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private static async Task<bool> RemoverAssertDoSchemaAsync(string schemaPath, CancellationToken cancellationToken)
+        {
+            byte[] bytes;
+            try
+            {
+                bytes = await File.ReadAllBytesAsync(schemaPath, cancellationToken);
+            }
+            catch
+            {
+                return false;
+            }
+
+            var content = DecodeSchema(bytes, out var encoding);
+            var stripped = AssertElementRegex.Replace(content, string.Empty);
+            if (string.Equals(content, stripped, StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            var targetEncoding = encoding ?? Encoding.UTF8;
+            await File.WriteAllBytesAsync(schemaPath, targetEncoding.GetBytes(stripped), cancellationToken);
+            return true;
         }
 
         private static string ConstruirMensagemLegivel(ValidationEventArgs args)
