@@ -6,6 +6,7 @@
 # Ficheiros de build
 bin/
 obj/
+dist/
 *.log
 
 # Publicações locais

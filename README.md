@@ -1,6 +1,6 @@
 ﻿# EnviaSaft 📤
 
-**EnviaSaft** é uma aplicação desktop gratuita desenvolvida em WPF (.NET) que facilita o envio de ficheiros SAF-T para a Autoridade Tributária, utilizando a aplicação oficial *FactemiCLI* da AT.
+**EnviaSaft** é uma aplicação desktop gratuita desenvolvida em .NET/Avalonia que facilita o envio de ficheiros SAF-T para a Autoridade Tributária, utilizando a aplicação oficial *FactemiCLI* da AT.
 
 ---
 
@@ -19,8 +19,8 @@
 ## 📦 Requisitos
 
 - Java instalado (para correr o cliente oficial `.jar` da AT — o nome do ficheiro pode variar)
-- .NET 6.0 ou superior
-- Windows 10/11
+- .NET 8.0 SDK (para desenvolvimento) ou build self-contained
+- Windows 10/11 ou macOS (Apple Silicon)
 - (Opcional) Acesso à internet no primeiro arranque para descarregar automaticamente o XSD oficial SAFTPT1.04_01.xsd. Se preferir, coloque manualmente esse ficheiro em `C:\Users\<UTILIZADOR>\AppData\Roaming\EnviaSaft\schemas`.
 
 ---
@@ -37,7 +37,7 @@
 
 ## 🛠️ Desenvolvimento
 
-- Requer o .NET 8 SDK e uma máquina Windows (a aplicação usa WPF).
+- Requer o .NET 8 SDK.
 - Requer Java para executar o cliente oficial da AT.
 
 Se o comando `dotnet` não estiver disponível no seu ambiente de desenvolvimento ou de CI pode usar o script `scripts/install-dotnet.sh`:
@@ -55,6 +55,26 @@ export PATH="$DOTNET_ROOT:$PATH"
 ```
 
 Se estiver atrás de um proxy HTTP/HTTPS configure `HTTP_PROXY` e `HTTPS_PROXY` antes de correr o script.
+
+## 🍎 Bundle `.app` (macOS)
+
+Para gerar uma aplicação nativa `.app` para Apple Silicon:
+
+```bash
+scripts/build-macos-app.sh
+```
+
+O bundle será criado em:
+
+```bash
+dist/macos/EnvioSafTApp.app
+```
+
+Para abrir no Finder/terminal:
+
+```bash
+open dist/macos/EnvioSafTApp.app
+```
 
 ---
 
