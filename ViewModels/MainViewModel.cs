@@ -405,50 +405,48 @@ namespace EnvioSafTApp.ViewModels
                 return; // evita reentradas
 
             IsSending = true;
-
-            if (!ValidarCamposObrigatorios())
-            {
-                IsSending = false;
-                return;
-            }
-
-             if (!File.Exists(FicheiroSafT))
-             {
-                ShowTicker("Ficheiro SAF-T não encontrado.", TickerMessageType.Error);
-                IsSending = false;
-                return;
-             }
-
-            // Utilizar jar local; apenas tentar descarregar se não existir.
-            string jarPath = _jarUpdateService.GetLocalJarPath();
-            string jarFileName = Path.GetFileName(jarPath);
-
-            if (!File.Exists(jarPath))
-            {
-                var jarUpdateResult = await _jarUpdateService.EnsureLatestAsync(CancellationToken.None);
-                jarPath = jarUpdateResult.JarPath;
-                jarFileName = Path.GetFileName(jarPath);
-
-                if (!jarUpdateResult.Success || !File.Exists(jarPath))
-                {
-                    var message = jarUpdateResult.Message ?? $"Não foi possível preparar o {jarFileName}. Coloque o ficheiro .jar na pasta 'libs'.";
-                    ShowTicker(message, jarUpdateResult.UsedFallback ? TickerMessageType.Warning : TickerMessageType.Error);
-                    if (!jarUpdateResult.UsedFallback)
-                    {
-                        return;
-                    }
-                }
-            }
-
-            string updatePath = Path.GetDirectoryName(jarPath) ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "libs");
-
-            OutputText = "";
-            OutputSummary = string.Empty;
-            // _ultimoLogPath = null; // Need property?
-            SelectedTabIndex = 2; // Resultado tab
             
             try
             {
+                if (!ValidarCamposObrigatorios())
+                {
+                    return;
+                }
+
+                if (!File.Exists(FicheiroSafT))
+                {
+                    ShowTicker("Ficheiro SAF-T não encontrado.", TickerMessageType.Error);
+                    return;
+                }
+
+                // Utilizar jar local; apenas tentar descarregar se não existir.
+                string jarPath = _jarUpdateService.GetLocalJarPath();
+                string jarFileName = Path.GetFileName(jarPath);
+
+                if (!File.Exists(jarPath))
+                {
+                    var jarUpdateResult = await _jarUpdateService.EnsureLatestAsync(CancellationToken.None);
+                    jarPath = jarUpdateResult.JarPath;
+                    jarFileName = Path.GetFileName(jarPath);
+
+                    if (!jarUpdateResult.Success || !File.Exists(jarPath))
+                    {
+                        var message = jarUpdateResult.Message ?? $"Não foi possível preparar o {jarFileName}. Coloque o ficheiro .jar na pasta 'libs'.";
+                        ShowTicker(message, jarUpdateResult.UsedFallback ? TickerMessageType.Warning : TickerMessageType.Error);
+                        if (!jarUpdateResult.UsedFallback)
+                        {
+                            return;
+                        }
+                    }
+                }
+
+                string updatePath = Path.GetDirectoryName(jarPath) ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "libs");
+
+                OutputText = "";
+                OutputSummary = string.Empty;
+                // _ultimoLogPath = null; // Need property?
+                SelectedTabIndex = 2; // Resultado tab
+
                 var dataEnvio = DateTime.Now;
                 var resultado = await Task.Run(() =>
                 {
